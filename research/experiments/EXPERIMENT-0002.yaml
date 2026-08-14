@@ -1,0 +1,45 @@
+id: EXPERIMENT-0002
+objective: OBJECTIVE-0001
+status: ready
+title: Confirm candidate stability across predefined temporal folds
+why_next: The candidate passed the committed decision gates and at least one feature
+  group was retained, but the current fixture is too small to justify bounded model
+  search or promotion.
+hypothesis: The accepted linear candidate with the retained core feature group will
+  preserve directional improvement across predefined temporal folds without changing
+  the frozen feature set.
+rationale:
+- 'Completed decision outcome: accepted.'
+- 'Retained feature groups: FEATURE-GROUP-CORE-0001.'
+- Stability evidence is required before bounded model or feature search.
+expected_effect: Produce stable directional evidence across predefined temporal folds.
+falsification:
+- Any predefined fold shows candidate degradation beyond the committed stability tolerance.
+- Aggregate validation and out-of-sample direction no longer agree.
+baseline: BASELINE-NAIVE-0001
+candidate:
+  model: MODEL-LINEAR-0001
+  feature_set: FEATURESET-CORE-0001
+data:
+- id: DATASET-LOCAL-FIXTURE-0001
+  required_fields:
+  - timestamp
+  - entity_id
+  - target
+  - feature_1
+  minimum_start: '2020-01-01'
+  minimum_end: '2024-12-31'
+capabilities:
+- id: CAPABILITY-TIME-AWARE-SPLIT-0001
+  kind: split-strategy
+- id: CAPABILITY-LINEAR-RUNNER-0001
+  kind: model-runner
+- id: CAPABILITY-TEMPORAL-STABILITY-0001
+  kind: evaluation-protocol
+split_spec: SPLIT-PREDEFINED-TEMPORAL-FOLDS-0001
+evaluation_spec: EVALUATION-TEMPORAL-STABILITY-0001
+decision_policy: POLICY-REPRODUCIBILITY-FIRST-0001
+budget:
+  maximum_trials: 3
+  maximum_runtime_minutes: 15
+  maximum_compute_cost: 0

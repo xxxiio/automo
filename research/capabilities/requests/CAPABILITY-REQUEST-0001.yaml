@@ -1,0 +1,33 @@
+schema_version: 1
+id: CAPABILITY-REQUEST-0001
+experiment: EXPERIMENT-0002
+capability:
+  id: CAPABILITY-TEMPORAL-DIAGNOSTIC-REPORT-0001
+  kind: report-generator
+reason: >
+  A reusable diagnostic report is required to present temporal-fold stability
+  evidence without changing the underlying research decision.
+contract:
+  inputs:
+    - temporal-stability.json
+  outputs:
+    - temporal-diagnostic.md
+requirements:
+  - deterministic output
+  - no model fitting or out-of-sample tuning
+  - preserve all completed research evidence
+acceptance:
+  - generated report references the committed temporal evidence hash
+  - tests pass
+  - only allowed paths are changed
+scope:
+  allowed_paths:
+    - src/automo/reports
+    - tests/reports
+    - docs/generated
+  forbidden_paths:
+    - runs
+    - recommendations
+    - research/experiments
+    - research/objectives
+    - research/policies

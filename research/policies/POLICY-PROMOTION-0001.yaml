@@ -1,0 +1,8 @@
+id: POLICY-PROMOTION-0001
+required_decision_outcome: accepted
+minimum_validation_improvement: 0.0
+minimum_out_of_sample_improvement: 0.0
+minimum_temporal_improved_fraction: 1.0
+require_temporal_directional_agreement: true
+maximum_duration_ms: 50.0
+maximum_compute_cost: 0.0

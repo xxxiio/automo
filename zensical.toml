@@ -1,0 +1,29 @@
+[project]
+site_name = "Automo"
+site_description = "Automated model optimisation and lifecycle research"
+site_url = "https://xlatomapp.github.io/automo/"
+docs_dir = "docs"
+site_dir = "site"
+nav = [
+  { "Home" = "index.md" },
+  { "Getting started" = "getting-started.md" },
+  { "User guide" = "USER-GUIDE.md" },
+  { "Public API" = "public-api.md" },
+  { "Runtime" = "runtime.md" },
+  { "Trainers and graphs" = "trainers-and-graphs.md" },
+  { "Model registry" = "model-registry.md" },
+  { "Refresh" = "refresh.md" },
+  { "Research" = "research.md" },
+  { "Release contract" = "release-contract.md" },
+  { "Publishing" = "publishing.md" },
+  { "Project skeleton" = "PROJECT-SKELETON.md" },
+]
+
+[project.theme]
+features = ["navigation.path", "content.code.copy"]
+
+[project.markdown_extensions]
+admonition = {}
+tables = {}
+
+# Registry lifecycle documentation: docs/model-registry.md

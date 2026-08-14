@@ -1,0 +1,8 @@
+id: FEATURESET-CORE-0001
+disposition_policy: POLICY-FEATURE-DISPOSITION-0001
+groups:
+  - id: FEATURE-GROUP-CORE-0001
+    description: The single deterministic local fixture input feature.
+    features:
+      - feature_1
+    ablation_reference: BASELINE-NAIVE-0001

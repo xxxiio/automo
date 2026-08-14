@@ -1,0 +1,9 @@
+id: POLICY-REPRODUCIBILITY-FIRST-0001
+metric: mse
+lower_is_better: true
+minimum_validation_observations: 2
+minimum_out_of_sample_observations: 2
+minimum_validation_improvement: 0.0
+minimum_out_of_sample_improvement: 0.0
+maximum_oos_degradation_from_validation: 100.0
+require_directional_agreement: true

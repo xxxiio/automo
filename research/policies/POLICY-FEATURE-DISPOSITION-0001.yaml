@@ -1,0 +1,10 @@
+id: POLICY-FEATURE-DISPOSITION-0001
+metric: mse
+lower_is_better: true
+minimum_validation_observations: 2
+minimum_out_of_sample_observations: 2
+minimum_validation_improvement: 0.0
+minimum_out_of_sample_improvement: 0.0
+minimum_validation_harm: 0.0
+minimum_out_of_sample_harm: 0.0
+maximum_feature_groups: 1

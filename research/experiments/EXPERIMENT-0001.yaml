@@ -1,0 +1,44 @@
+id: EXPERIMENT-0001
+objective: OBJECTIVE-0001
+status: ready
+title: Establish the first baseline and candidate fixture
+why_next: >
+  A deterministic local fitting fixture is the highest-priority next step because all
+  diagnosis, search, and GetDone-assisted capability work depends on reproducible run evidence.
+hypothesis: >
+  A simple candidate model using the core feature set can be fitted and evaluated more
+  reproducibly than an ad hoc notebook baseline without weakening the primary benchmark.
+rationale:
+  - No governed fitting and split runner exists yet.
+  - A small local fixture will expose the contracts needed before real data is connected.
+expected_effect: >
+  Produce identical metrics for repeated runs with the same data snapshot, code revision,
+  environment, and seed.
+falsification:
+  - Repeated runs with the same frozen inputs produce different benchmark evidence.
+  - Validation or out-of-sample data influences fitting transforms.
+baseline: BASELINE-NAIVE-0001
+candidate:
+  model: MODEL-LINEAR-0001
+  feature_set: FEATURESET-CORE-0001
+data:
+  - id: DATASET-LOCAL-FIXTURE-0001
+    required_fields:
+      - timestamp
+      - entity_id
+      - target
+      - feature_1
+    minimum_start: "2020-01-01"
+    minimum_end: "2024-12-31"
+capabilities:
+  - id: CAPABILITY-TIME-AWARE-SPLIT-0001
+    kind: split-strategy
+  - id: CAPABILITY-LINEAR-RUNNER-0001
+    kind: model-runner
+split_spec: SPLIT-WALK-FORWARD-0001
+evaluation_spec: EVALUATION-BASELINE-0001
+decision_policy: POLICY-REPRODUCIBILITY-FIRST-0001
+budget:
+  maximum_trials: 3
+  maximum_runtime_minutes: 10
+  maximum_compute_cost: 0

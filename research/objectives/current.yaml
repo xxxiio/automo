@@ -1,0 +1,15 @@
+id: OBJECTIVE-0001
+status: active
+outcome: 'Establish the first reproducible baseline-versus-candidate research loop
+  while preserving data provenance, untouched out-of-sample evaluation, and explicit
+  blockers.
+
+  '
+primary_metric: task_specific_primary_metric
+secondary_metrics:
+- stability
+- feature_usefulness
+- runtime
+- cost
+current_champion: null
+next_experiment: EXPERIMENT-0002

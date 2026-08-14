@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "automo"
+dynamic = ["version"]
+description = "Automated model optimisation and lifecycle research"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Automo contributors" }]
+keywords = ["model-research", "model-optimisation", "machine-learning", "automl", "workflows"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = ["PyYAML>=6.0", "typer>=0.16,<1"]
+
+[project.optional-dependencies]
+getdone = ["getdone-dev>=1.1.2,<2"]
+dev = ["pytest>=8", "ruff>=0.6", "pre-commit>=3.7"]
+docs = ["zensical"]
+
+[project.scripts]
+automo = "automo.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["automo*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+exclude = [".agent", ".venv", "build", "dist", "site"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true
+
+[tool.setuptools.dynamic]
+version = {attr = "automo._version.__version__"}

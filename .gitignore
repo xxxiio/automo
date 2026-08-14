@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+site/
+
+# Runtime-generated Automo state
+runs/
+recommendations/
+capability-results/
+.automo/
+
+# Local tooling
+.coverage
+htmlcov/
