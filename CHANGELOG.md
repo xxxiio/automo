@@ -30,7 +30,7 @@
 
 - The package and CLI now use the Automo identity exclusively.
 - Package version metadata has one source of truth.
-- Pre-commit is the canonical Ruff lint/format quality gate; CI runs the same hooks.
+- Pre-commit is the canonical repository-quality gate; it combines repository/configuration hygiene with Ruff lint/format, and CI runs the same hook configuration.
 - Runtime-generated runs, recommendations, build outputs, and local egg-info are excluded from the clean source tree/release artifacts.
 - Wheel and sdist clean-install checks are release gates.
 

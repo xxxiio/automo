@@ -13,7 +13,7 @@ status: current
 ## Environment prerequisites
 
 - Python 3.11 or newer.
-- `uv` for development dependency management and canonical tool execution.
+- `uv` for development dependency management; normal developers activate `.venv` and invoke installed tools directly.
 - `pip` remains sufficient for installing the built standalone package.
 - No database, network service, credential, or GetDone installation is required for the standalone health gate.
 - GetDone is optional and is installed only through the `getdone` extra.
@@ -30,6 +30,25 @@ python -m pip install .
 uv sync --extra dev
 ```
 
+For normal developer clones, activate the synced environment and install the Git hook once:
+
+```bash
+source .venv/bin/activate
+pre-commit install
+```
+
+Ordinary `git commit` then runs `.pre-commit-config.yaml` automatically. The explicit full local source-quality gate is:
+
+```bash
+pre-commit run --all-files
+```
+
+For ChatGPT/sandbox environments where an activated shell is not persistent, the equivalent project-managed invocation is:
+
+```bash
+uv run --extra dev pre-commit run --all-files
+```
+
 Documentation tooling is intentionally separate from the core development gate:
 
 ```bash
@@ -41,17 +60,23 @@ uv run zensical build
 
 ## Format
 
+Formatting is owned by the Ruff formatter hook inside pre-commit. For a targeted hook run in an activated developer environment:
+
 ```bash
-uv run --extra dev ruff format src tests scripts
+pre-commit run ruff-format --all-files
 ```
+
+Direct `ruff format` is troubleshooting-only and is not a second canonical gate.
 
 ## Lint
 
+Linting is owned by the Ruff lint hook inside pre-commit, while non-Ruff hooks continue to enforce repository/configuration hygiene. For a targeted hook run:
+
 ```bash
-uv run --extra dev ruff check src tests scripts
+pre-commit run ruff-check --all-files
 ```
 
-Ruff is the canonical formatter/linter. In dependency-constrained offline environments where Ruff is not already cached, the standalone health gate still runs the repository-owned deterministic source-hygiene check:
+The complete canonical source-quality result comes only from `pre-commit run --all-files`. In dependency-constrained offline environments where hook environments are unavailable, the repository-owned deterministic source-hygiene fallback is:
 
 ```bash
 python scripts/source_check.py
@@ -129,6 +154,6 @@ These tests cover protected-evidence hashes, rollback, bounded trial execution, 
 
 ## Unavailable checks
 
-- Ruff is run through `uv` in normal development and CI. If the current environment is offline and Ruff is not already present in the uv cache, `scripts/source_check.py` remains the dependency-free fallback for the local release health gate.
+- The complete pre-commit gate requires its remote hook environments. If the current environment is offline and those environments are not already cached, `scripts/source_check.py` remains the dependency-free fallback for local source-hygiene evidence; this does not satisfy EC-013.
 - Zensical is documentation tooling, not a release blocker. Run `uv run --extra docs zensical serve` or `uv run --extra docs zensical build` when documentation dependencies are available.
 - A standalone GetDone project-validator executable is not bundled with Automo. GetDone-specific validation is available only when the optional integration package supplies it.

@@ -28,7 +28,7 @@ The research/runtime architecture is complete enough for external use. Remaining
 - Synthetic focused and end-to-end onboarding examples.
 - Controlled CLI errors for common user mistakes.
 - Wheel and sdist build/install smoke gates.
-- Python 3.11–3.13 test matrix plus one canonical pre-commit/Ruff quality gate.
+- Python 3.11–3.13 test matrix plus one canonical pre-commit quality gate combining repository hygiene with Ruff lint/format.
 - Public README, changelog, roadmap, release contract, and security documentation.
 
 ## Non-goals
@@ -48,7 +48,7 @@ The research/runtime architecture is complete enough for external use. Remaining
 
 ## Risks
 
-- The current offline environment cannot provision the pre-commit/Ruff hook dependencies; the configured CI gate must provide final EC-013 execution evidence.
+- The current offline environment cannot provision the remote pre-commit hook environments; the configured CI gate must provide final EC-013 execution evidence.
 
 ## Ordered implementation sequence
 
@@ -57,7 +57,7 @@ The research/runtime architecture is complete enough for external use. Remaining
 3. Harden public API, initialization, plugin loading, and CLI errors.
 4. Complete public docs and onboarding examples.
 5. Verify wheel/sdist release artifacts offline.
-6. Run pre-commit/Ruff once through CI and run tests across Python 3.11–3.13.
+6. Run the complete pre-commit hook set once through CI and run tests across Python 3.11–3.13.
 
 ## Exit criteria
 
@@ -73,7 +73,7 @@ The research/runtime architecture is complete enough for external use. Remaining
 - [x] EC-010: Clean wheel installation and smoke workflow pass.
 - [x] EC-011: Clean sdist installation and smoke workflow pass.
 - [ ] EC-012: Python 3.11, 3.12, and 3.13 CI passes for the release candidate.
-- [ ] EC-013: CI executes the repository pre-commit hooks, including Ruff lint/format, successfully.
+- [ ] EC-013: CI executes the complete repository pre-commit hook set, including repository/configuration hygiene and Ruff lint/format, successfully.
 - [x] EC-014: Public release documentation and terminology are release-ready.
 
 ## Evidence

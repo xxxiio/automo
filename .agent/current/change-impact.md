@@ -30,7 +30,7 @@ TASK-0016 — Public-alpha hardening and release candidate preparation.
 
 ## Assumptions and unknowns
 
-- Connected CI has network access to install dev dependencies and pre-commit hook environments.
+- Connected CI has network access to install pre-commit itself and provision the remote hook environments declared by `.pre-commit-config.yaml`.
 
 ## Required outputs
 

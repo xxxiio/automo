@@ -32,21 +32,21 @@ MILESTONE-0013 — Public alpha hardening.
 
 ## In progress
 
-- Connected Python 3.11–3.13 CI and pre-commit/Ruff execution evidence.
+- Connected Python 3.11–3.13 CI and complete pre-commit execution evidence.
 
 ## Blocked
 
-- Local pre-commit/Ruff execution is unavailable because this environment cannot resolve/install hook dependencies from the network. Publication is intentionally gated on connected CI instead of waiving the check.
+- Local complete pre-commit execution is unavailable because this environment cannot resolve/install remote hook environments from the network. Publication is intentionally gated on connected CI instead of waiving the check.
 
 ## Key decisions
 
-- Pre-commit is the canonical Ruff lint/format quality gate; CI must run the same hooks.
+- Pre-commit is the canonical repository-quality gate; it retains PPW-style repository/configuration hygiene while Ruff replaces overlapping Black/isort/Flake8-family checks. Developer Git hooks and CI consume the same configuration.
 - Public examples remain synthetic and domain-neutral.
 - Agent research governance, guidance completeness, project-specific extension composition, and consumer compatibility are explicit public-alpha blockers and are now locally satisfied through MILESTONE-0016.
 
 ## Project health
 
-- 119 tests pass locally.
+- 123 tests pass locally.
 - Offline wheel/sdist release health gate passes.
 - GetDone 1.1.2 validates 27 managed files with 0 errors and 10 expected project-owned warnings.
 
@@ -60,4 +60,4 @@ MILESTONE-0013 — Public alpha hardening.
 
 ## Next deterministic step
 
-NEXT-0020 — run connected Python 3.11–3.13 CI and pre-commit/Ruff, then record the result before publication.
+NEXT-0020 — run connected Python 3.11–3.13 CI and the complete pre-commit gate, then record the result before publication.

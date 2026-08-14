@@ -16,10 +16,13 @@ For local development:
 
 ```bash
 uv sync --extra dev
-uv run pre-commit install
-uv run pre-commit run --all-files
-uv run pytest -q
+source .venv/bin/activate
+pre-commit install
+pre-commit run --all-files
+pytest -q
 ```
+
+On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`. The `uv run --extra dev ...` form is reserved for agent/sandbox execution where an activated developer shell is not assumed.
 
 ## Start a project
 
@@ -72,7 +75,7 @@ Automo does not sandbox project plugins, trainers, evaluators, codecs, calibrato
 
 ## Development workflow
 
-This repository uses pre-commit as the canonical source-quality gate. Ruff formatting and linting are configured as pre-commit hooks, and CI runs the same hooks. GetDone project records under `.agent/` are development metadata for this repository and are not required at runtime.
+This repository uses pre-commit as the canonical source-quality gate. Repository/configuration hygiene and Ruff formatting/linting are configured as hooks, and CI runs that same configuration directly. GetDone project records under `.agent/` are development metadata for this repository and are not required at runtime.
 
 
 ## Project-specific research guidance

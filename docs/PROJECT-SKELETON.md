@@ -17,19 +17,25 @@ Automo will borrow the comprehensive project shape of Python Project Wizard (PPW
 
 ## Quality tooling
 
-- **Ruff** is the canonical formatter, import sorter, linter, upgrade/style checker, and first-line static quality tool.
-- Do not add Black, isort, Flake8, pyupgrade, autoflake, or overlapping style tools unless a concrete unsupported requirement appears.
+- **pre-commit** is the canonical fast repository-quality gate for developer commits and CI.
+- The hook set combines repository/configuration hygiene with Python lint/format checks.
+- **Ruff** replaces overlapping Black, isort, Flake8, pyupgrade, and similar Python style tooling.
+- Ruff does **not** replace orthogonal hooks such as YAML/TOML/JSON validation, merge-conflict detection, line-ending/whitespace normalization, large-file checks, private-key detection, or pyproject validation.
 - **pytest** is the canonical test runner.
 - Coverage may be added through pytest-compatible coverage tooling when useful.
 - Type checking is a separate concern; select a checker only when the runtime contracts justify it rather than duplicating lint responsibilities.
 
-Canonical commands use uv for tool execution:
+Normal developer setup and quality commands use the activated project environment:
 
 ```bash
-uv run --extra dev ruff format --check .
-uv run --extra dev ruff check .
-uv run --extra dev pytest -q
+uv sync --extra dev
+source .venv/bin/activate
+pre-commit install
+pre-commit run --all-files
+pytest -q
 ```
+
+Agent/sandbox execution may use `uv run --extra dev pre-commit run --all-files` when shell activation is not persistent. Direct Ruff commands are troubleshooting tools, not a second canonical quality gate.
 
 ## Documentation
 
@@ -40,9 +46,9 @@ uv run --extra dev pytest -q
 
 ## Automation
 
-- pre-commit runs Ruff hooks equivalent to the canonical local Ruff commands.
-- GitHub Actions provisions uv and runs the same Ruff and pytest commands rather than maintaining a divergent CI-only toolchain.
-- The dependency-light package health gate covers source hygiene, tests, package build, and clean-install smoke testing; Ruff is enforced through uv in normal development/CI, while Zensical remains optional.
+- Local Git commits and GitHub Actions both execute the same `.pre-commit-config.yaml`; developers install the Git hook, while CI invokes pre-commit directly.
+- GitHub Actions keeps pre-commit quality, the Python-version pytest matrix, packaging/smoke checks, and documentation builds as separate jobs.
+- The dependency-light package health gate covers source hygiene, tests, package build, and clean-install smoke testing; Zensical remains optional for core development.
 
 ## Proposed repository shape
 

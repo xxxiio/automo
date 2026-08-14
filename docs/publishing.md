@@ -4,7 +4,7 @@ Automo uses GitHub Actions for continuous integration, PyPI publishing, and docu
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests. It runs pre-commit/Ruff once on Python 3.11, runs the test suite across Python 3.11, 3.12, and 3.13, runs packaging/smoke checks once, and builds the documentation strictly once. Successful `main` CI also deploys that exact documentation build to GitHub Pages.
+`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests. It runs the complete repository pre-commit hook set once on Python 3.11, runs the test suite across Python 3.11, 3.12, and 3.13, runs packaging/smoke checks once, and builds the documentation strictly once. Successful `main` CI also deploys that exact documentation build to GitHub Pages.
 
 ## PyPI releases
 

@@ -25,7 +25,7 @@ dependencies = ["PyYAML>=6.0", "typer>=0.16,<1"]
 
 [project.optional-dependencies]
 getdone = ["getdone-dev>=1.1.2,<2"]
-dev = ["pytest>=8", "ruff>=0.6", "pre-commit>=3.7"]
+dev = ["pytest>=8", "ruff>=0.16,<0.17", "pre-commit>=4.6,<5"]
 docs = ["zensical"]
 
 [project.scripts]

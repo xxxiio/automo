@@ -171,6 +171,13 @@ def test_ci_owns_quality_tests_health_docs_and_pages_without_tag_duplication() -
     assert "branches: [main]" in workflow
     assert "tags:" not in workflow
     assert workflow.count("pre-commit run --all-files") == 1
+    assert 'name: pre-commit' in workflow
+    assert 'python-version: "3.11"' in workflow
+    assert "actions/setup-python@v6" in workflow
+    assert 'python -m pip install "pre-commit==4.6.0"' in workflow
+    assert "actions/cache@v4" in workflow
+    assert "~/.cache/pre-commit" in workflow
+    assert "uv run --python 3.11 pre-commit" not in workflow
     assert 'python-version: ["3.11", "3.12", "3.13"]' in workflow
     assert "pytest -q" in workflow
     assert "scripts/health_gate.py --skip-tests" in workflow
@@ -182,3 +189,40 @@ def test_ci_owns_quality_tests_health_docs_and_pages_without_tag_duplication() -
     assert "pages: write" in workflow
     assert "id-token: write" in workflow
     assert not Path(".github/workflows/docs.yml").exists()
+
+
+def test_precommit_combines_repository_hygiene_with_ruff_without_legacy_overlap() -> None:
+    config = Path(".pre-commit-config.yaml").read_text(encoding="utf-8")
+    for hook in (
+        "check-added-large-files",
+        "check-ast",
+        "check-case-conflict",
+        "check-json",
+        "check-merge-conflict",
+        "check-toml",
+        "check-yaml",
+        "debug-statements",
+        "detect-private-key",
+        "end-of-file-fixer",
+        "mixed-line-ending",
+        "trailing-whitespace",
+        "validate-pyproject",
+        "ruff-check",
+        "ruff-format",
+    ):
+        assert f"id: {hook}" in config
+    assert "--exit-non-zero-on-fix" in config
+    for legacy in ("mirrors-isort", "ambv/black", "psf/black", "pycqa/flake8", "pyupgrade"):
+        assert legacy not in config.lower()
+
+
+def test_developer_and_agent_precommit_workflows_are_distinct() -> None:
+    contributing = Path("CONTRIBUTING.md").read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+    assert "pre-commit install" in contributing
+    assert "pre-commit run --all-files" in contributing
+    assert "uv run pre-commit install" not in contributing
+    assert "uv run pre-commit run --all-files" not in contributing
+    assert "uv run --extra dev pre-commit run --all-files" in contributing
+    assert "pre-commit install" in readme
+    assert "uv run pre-commit install" not in readme

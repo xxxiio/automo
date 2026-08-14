@@ -513,7 +513,7 @@ None
 - Public API, trust-boundary, onboarding, and release documentation.
 - Fresh project scaffolding and controlled CLI failures.
 - Wheel/sdist clean-install release gates.
-- Pre-commit/Ruff quality gate through Python 3.11–3.13 CI.
+- Complete pre-commit repository-quality gate plus Python 3.11–3.13 CI.
 
 #### Non-goals
 
@@ -533,7 +533,7 @@ None
 - [x] EC-010: Wheel clean-install smoke passes.
 - [x] EC-011: Sdist clean-install smoke passes.
 - [ ] EC-012: Python 3.11–3.13 connected CI passes.
-- [ ] EC-013: CI pre-commit/Ruff hooks pass.
+- [ ] EC-013: CI complete pre-commit hooks pass, including repository/configuration hygiene and Ruff lint/format.
 - [x] EC-014: Public release docs and terminology are ready.
 
 #### Evidence

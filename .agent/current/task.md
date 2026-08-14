@@ -37,14 +37,14 @@ All fourteen public-alpha exit criteria have reproducible evidence before public
 
 ## Risks
 
-- Offline environment prevents installation/execution of pre-commit/Ruff hook dependencies.
+- Offline environment prevents installation/execution of remote pre-commit hook environments.
 
 ## Acceptance criteria
 
 - [x] AC-001: Local source/tests/examples/wheel/sdist gates pass.
 - [x] AC-002: Public persistence/API/security/onboarding contracts are explicit.
-- [x] AC-003: CI configuration runs pre-commit once as the canonical quality gate and tests Python 3.11–3.13 separately.
-- [ ] AC-004: Connected CI confirms the Python 3.11–3.13 test matrix and the canonical pre-commit/Ruff quality job pass.
+- [x] AC-003: CI configuration runs the complete pre-commit configuration once as the canonical quality gate and tests Python 3.11–3.13 separately; developer Git hooks use the same configuration.
+- [ ] AC-004: Connected CI confirms the Python 3.11–3.13 test matrix and the canonical complete pre-commit quality job pass.
 
 ## Validation
 

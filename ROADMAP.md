@@ -32,7 +32,7 @@ The current package includes:
 - controlled CLI errors for normal user mistakes;
 - wheel and sdist clean-install smoke tests;
 - Python 3.11–3.13 CI;
-- pre-commit as the canonical Ruff formatting/linting gate;
+- pre-commit as the canonical repository-quality gate, with Ruff handling overlapping Python lint/format responsibilities;
 - public-ready README, security policy, changelog, and release contract.
 
 ## Deferred until after external feedback

@@ -23,7 +23,7 @@ TASK-0016 — Automo 0.3.0a1 public-alpha release candidate.
 | G-003 | Security/onboarding/release docs | pass | public docs and examples |
 | G-004 | Wheel and sdist clean installs | pass | health gate |
 | G-005 | Python 3.11–3.13 CI | not-run | configured workflow; connected CI unavailable locally |
-| G-006 | Pre-commit/Ruff | not-run | configured hooks; offline environment cannot provision dependencies |
+| G-006 | Pre-commit quality gate | not-run | PPW-derived hygiene + Ruff hooks configured; offline environment cannot provision remote hook environments |
 | G-007 | GetDone project contract | pass | 27 managed files, 0 errors, 10 expected warnings |
 
 ## Commands run
