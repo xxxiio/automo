@@ -8,7 +8,7 @@ from typing import Annotated
 
 import typer
 
-from automo.capabilities import CapabilityLifecycleError, fulfill_capability, inspect_capability
+from automo.capabilities import CapabilityLifecycleError, create_getdone_handoff, fulfill_capability, inspect_capability
 from automo.contracts import ContractError
 from automo.decisions import DecisionError, decide_local_run
 from automo.execution import (
@@ -21,6 +21,8 @@ from automo.execution.local import ExecutionError
 from automo.features import FeatureDispositionError, dispose_local_features
 from automo.findings import FindingError, propose_next_experiment
 from automo.integrations.getdone import GetDoneCapabilityWorkflow
+from automo.governance import GovernanceError, MilestoneOutcome, MilestoneStatus, ResearchGovernance
+from automo.guidance import (GuidanceError, guidance_lock, render_guidance, select_guidance, task_classes, validate_project_agent)
 from automo.promotions import PromotionError, recommend_promotion
 from automo.prerequisites import (
     DataAvailability,
@@ -167,6 +169,7 @@ def research_run(
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
     try:
+        ResearchGovernance(root).require_execution_ready()
         _, _, store, service = _research_components(root, space)
         report = service.execute(store.load_plan(iteration))
     except Exception as exc:
@@ -246,7 +249,7 @@ def refresh_command(
         data_iteration = DataIteration(iteration, snapshot.id, snapshot.content_hash)
         service = RefreshService(
             runtime, registry, FilesystemPoolStore(root / ".automo" / "pools"),
-            calibrators=runtime.plugin.calibrators, refresh_root=root / ".automo" / "refresh",
+            calibrators=runtime.plugin.calibrators, selectors=runtime.plugin.model_selectors, refresh_root=root / ".automo" / "refresh",
         )
         result = service.run(pool_spec, data_iteration, split_spec, data_source_id=data_source, dry_run=dry_run)
     except Exception as exc:
@@ -305,6 +308,149 @@ def _root_option() -> Path:
 
 
 
+@app.command("guidance")
+def guidance_command(
+    task_class: Annotated[str, typer.Option("--task-class", help="Research task class.")],
+    concern: Annotated[list[str] | None, typer.Option("--concern", help="Project-defined concern; repeat as needed.")] = None,
+    changed_path: Annotated[list[str] | None, typer.Option("--changed-path", help="Relevant project path; repeat for inference.")] = None,
+    no_project_agent: Annotated[bool, typer.Option("--no-project-agent", help="Disable .project-agent/automo discovery.")] = False,
+    paths_only: Annotated[bool, typer.Option("--paths-only", help="Emit selected guidance paths only.")] = False,
+    explain: Annotated[bool, typer.Option("--explain", help="Show guidance source provenance.")] = False,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Select canonical research guidance plus additive .project-agent/automo rules."""
+    try:
+        docs = select_guidance(task_class, project_root=root, concerns=tuple(concern or ()), changed_paths=tuple(changed_path or ()), use_project_agent=not no_project_agent)
+        typer.echo(render_guidance(docs, paths_only=paths_only, explain=explain), nl=False)
+    except GuidanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+
+
+@app.command("guidance-check")
+def guidance_check_command(
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Validate project-agent references and the pinned guidance composition."""
+    errors = validate_project_agent(root)
+    if errors:
+        for error in errors:
+            typer.echo(f"error: {error}", err=True)
+        raise typer.Exit(1)
+    try:
+        status, _ = guidance_lock(root)
+    except GuidanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"project-agent: valid")
+    typer.echo(f"guidance-lock: {status}")
+    if status not in {"current", "missing"}:
+        raise typer.Exit(1)
+
+
+@app.command("guidance-lock")
+def guidance_lock_command(
+    write: Annotated[bool, typer.Option("--write", help="Write the reviewed current composition lock.")] = False,
+    plan: Annotated[bool, typer.Option("--plan", help="Show lock status without writing.")] = False,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Check or explicitly pin the Automo + project-agent guidance composition."""
+    del plan
+    try:
+        status, payload = guidance_lock(root, write=write)
+    except GuidanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Status: {status}")
+    typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+
+
+@research_app.command("milestone-create")
+def research_milestone_create(
+    milestone_id: str,
+    question: Annotated[str, typer.Option("--question")],
+    why_next: Annotated[str, typer.Option("--why-next")],
+    exit_criterion: Annotated[list[str], typer.Option("--exit-criterion")],
+    non_goal: Annotated[list[str] | None, typer.Option("--non-goal")] = None,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Create a proposed bounded research milestone and enter plan mode."""
+    try:
+        item = ResearchGovernance(root).create_milestone(
+            milestone_id, question=question, why_next=why_next,
+            exit_criteria=tuple(exit_criterion), non_goals=tuple(non_goal or ()),
+        )
+    except GovernanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Milestone: {item.id}")
+    typer.echo(f"Status: {item.status.value}")
+    typer.echo("Mode: plan")
+
+
+@research_app.command("milestone-transition")
+def research_milestone_transition(
+    milestone_id: str,
+    status: Annotated[str, typer.Option("--status", help="planning, approved, or active")],
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Advance one legal research-milestone transition."""
+    try:
+        target = MilestoneStatus(status)
+        if target == MilestoneStatus.CONCLUDED:
+            raise GovernanceError("use milestone-conclude to record a research outcome")
+        item = ResearchGovernance(root).transition(milestone_id, target)
+    except (GovernanceError, ValueError) as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Milestone: {item.id}")
+    typer.echo(f"Status: {item.status.value}")
+    typer.echo(f"Mode: {'research' if item.status == MilestoneStatus.ACTIVE else 'plan'}")
+
+
+@research_app.command("milestone-status")
+def research_milestone_status(
+    milestone_id: str | None = None,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Show the current or named research milestone."""
+    try:
+        governance = ResearchGovernance(root)
+        item = governance.load(milestone_id) if milestone_id else governance.current_milestone()
+        if item is None:
+            typer.echo("Mode: plan")
+            typer.echo("Current milestone: none")
+            return
+    except GovernanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Milestone: {item.id}")
+    typer.echo(f"Status: {item.status.value}")
+    typer.echo(f"Question: {item.question}")
+    if item.outcome:
+        typer.echo(f"Outcome: {item.outcome.value}")
+
+
+@research_app.command("milestone-conclude")
+def research_milestone_conclude(
+    milestone_id: str,
+    outcome: Annotated[str, typer.Option("--outcome", help="accepted, rejected, inconclusive, or invalid")],
+    conclusion: Annotated[str, typer.Option("--conclusion")],
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Conclude an active research milestone and return to plan mode."""
+    try:
+        item = ResearchGovernance(root).conclude(
+            milestone_id, outcome=MilestoneOutcome(outcome), conclusion=conclusion,
+        )
+    except (GovernanceError, ValueError) as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Milestone: {item.id}")
+    typer.echo(f"Outcome: {item.outcome.value if item.outcome else '-'}")
+    typer.echo("Mode: plan")
+
+
+@research_app.command("task-classes")
+def research_task_classes() -> None:
+    """List agent-facing research task classes accepted by ``automo guidance``."""
+    for item in task_classes():
+        typer.echo(item)
+
+
 @app.command("init")
 def init_command(
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
@@ -335,6 +481,24 @@ def status_command(
     as_json: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
 ) -> None:
     """Render a concise read-only summary of current research state."""
+    if (root / ".automo" / "project.yaml").is_file():
+        try:
+            payload = ResearchGovernance(root).status_payload()
+        except GovernanceError as exc:
+            raise typer.Exit(_error(str(exc))) from exc
+        if as_json:
+            typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+            return
+        typer.echo("# Automo Research Status")
+        typer.echo(f"Mode: {payload['mode']}")
+        milestone = payload["current_milestone"]
+        if milestone:
+            typer.echo(f"Milestone: {milestone['id']} ({milestone['status']})")
+            typer.echo(f"Question: {milestone['question']}")
+        else:
+            typer.echo("Milestone: none")
+        typer.echo(f"Next: {payload['next_step'].get('objective', '-')}")
+        return
     try:
         status = project_status(root)
     except (ContractError, OSError, ValueError) as exc:
@@ -351,6 +515,28 @@ def plan_command(
     as_json: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
 ) -> None:
     """Show the committed next experiment, rationale, budget, and falsification."""
+    if (root / ".automo" / "project.yaml").is_file():
+        try:
+            payload = ResearchGovernance(root).plan_payload()
+        except GovernanceError as exc:
+            raise typer.Exit(_error(str(exc))) from exc
+        if as_json:
+            typer.echo(json.dumps(payload, indent=2, sort_keys=True))
+            return
+        typer.echo(f"Mode: {payload['mode']}")
+        milestone = payload["milestone"]
+        if milestone:
+            typer.echo(f"Milestone: {milestone['id']} ({milestone['status']})")
+            typer.echo(f"Question: {milestone['question']}")
+            typer.echo(f"Why next: {milestone['why_next']}")
+            typer.echo("Exit criteria:")
+            for criterion in milestone["exit_criteria"]:
+                typer.echo(f"- {criterion}")
+        else:
+            typer.echo("Milestone: none")
+        typer.echo(f"Next: {payload['next_step'].get('objective', '-')}")
+        typer.echo(f"Execution allowed: {'yes' if payload['execution_allowed'] else 'no'}")
+        return
     try:
         payload = plan_payload(root)
     except (ContractError, OSError, ValueError) as exc:
@@ -618,6 +804,20 @@ def capability_status(
     typer.echo(f"Provider: {payload['provider']}")
     typer.echo(f"Ready: {'yes' if payload['ready_for_delegation'] else 'no'}")
     typer.echo(str(payload['detail']))
+
+
+@capability_app.command("handoff")
+def capability_handoff(
+    request_id: str,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Create a bounded GetDone development handoff without mutating ``.agent``."""
+    try:
+        path = create_getdone_handoff(root, request_id)
+    except CapabilityLifecycleError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Handoff: {path}")
+    typer.echo("Automo did not write .agent/; run GetDone development guidance separately.")
 
 
 @capability_app.command("fulfill")

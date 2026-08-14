@@ -79,19 +79,41 @@ class SelectionKind(StrEnum):
 class SelectionPolicy:
     id: str
     kind: SelectionKind = SelectionKind.BEST_OVERALL
+    selector: str | None = None
+
+
+class ModelSelector(Protocol):
+    id: str
+    def select(
+        self, pool: "ModelPoolSpec", snapshot: "ModelPoolSnapshot", *, context: Mapping[str, Any]
+    ) -> tuple[str, ...]: ...
 
 
 @dataclass(frozen=True)
 class ModelPoolSpec:
     id: str
     objective_id: str
-    model_spec_id: str
+    model_spec_id: str | None
     primary_metric_id: str
     primary_metric_direction: MetricDirection
     training_policy: TrainingPolicy
     calibration_policy: CalibrationPolicy
     retention_policy: RetentionPolicy
     selection_policy: SelectionPolicy
+    model_spec_ids: tuple[str, ...] = ()
+
+    @property
+    def resolved_model_spec_ids(self) -> tuple[str, ...]:
+        values = tuple(dict.fromkeys((*(self.model_spec_ids), *((self.model_spec_id,) if self.model_spec_id else ()))))
+        if not values:
+            raise ValueError("model pool requires at least one model spec id")
+        return values
+
+
+class StructuredCalibrator(Protocol):
+    id: str
+    artifact_codec: Any
+    def fit_outputs(self, outputs: Any, target: Sequence[Any], *, context: Mapping[str, Any]) -> Any: ...
 
 
 class RefreshAction(StrEnum):

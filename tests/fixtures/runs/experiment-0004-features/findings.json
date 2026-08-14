@@ -1,0 +1,45 @@
+{
+  "completed_evidence_modified": false,
+  "created_at": "2026-08-03T06:29:32.363911+00:00",
+  "diagnosis": "promising-but-under-evidenced",
+  "evidence": {
+    "decision": {
+      "path": "decision.json",
+      "sha256": "b2f25b4fd7d7eb7bdea0dbb12b31d5ad195d90e278eb748ab9c9efd937dc6dd9"
+    },
+    "feature_dispositions": {
+      "path": "feature-dispositions.json",
+      "sha256": "44926aa6745d12ef99aaae16cb385c0f50a8f65508096db33880c6c5f36f5057"
+    }
+  },
+  "experiment_id": "EXPERIMENT-0001",
+  "findings": [
+    {
+      "id": "FINDING-0001",
+      "kind": "experiment-decision",
+      "statement": "Experiment outcome was accepted."
+    },
+    {
+      "id": "FINDING-0002",
+      "kind": "feature-usefulness",
+      "statement": "Retained=['FEATURE-GROUP-CORE-0001']; rejected=[]; inconclusive=[]."
+    },
+    {
+      "id": "FINDING-0003",
+      "kind": "evidence-limit",
+      "statement": "The local fixture is insufficient for promotion or broad search."
+    }
+  ],
+  "next_experiment": {
+    "count": 1,
+    "falsification": [
+      "Any predefined fold shows candidate degradation beyond the committed stability tolerance.",
+      "Aggregate validation and out-of-sample direction no longer agree."
+    ],
+    "id": "EXPERIMENT-0002",
+    "path": "research/experiments/EXPERIMENT-0002.yaml",
+    "why_next": "The candidate passed the committed decision gates and at least one feature group was retained, but the current fixture is too small to justify bounded model search or promotion."
+  },
+  "run_id": "experiment-0004-features",
+  "schema_version": 1
+}

@@ -136,3 +136,25 @@ class ResearchIterationReport:
         for row in payload["results"]:
             row["stage"] = row["stage"].value if hasattr(row["stage"], "value") else row["stage"]
         return payload
+
+
+def validate_research_plan(plan: ResearchPlan) -> tuple[str, ...]:
+    """Return deterministic conformance errors for an agent-produced research plan."""
+    errors: list[str] = []
+    if len(plan.candidates) > plan.budget.maximum_candidates:
+        errors.append("candidate count exceeds the committed research budget")
+    if plan.search_space.maximum_compound_interventions > 1:
+        errors.append("compound interventions are not alpha-safe; isolate one conceptual change")
+    if plan.safeguards.minimum_improvement < 0:
+        errors.append("minimum improvement must not reward degradation")
+    fingerprints = [candidate.fingerprint for candidate in plan.candidates]
+    if len(fingerprints) != len(set(fingerprints)):
+        errors.append("research plan contains duplicate candidate fingerprints")
+    for candidate in plan.candidates:
+        if not candidate.expected_effect.strip():
+            errors.append(f"candidate {candidate.id} has no expected effect")
+        if not candidate.falsification or any(not item.strip() for item in candidate.falsification):
+            errors.append(f"candidate {candidate.id} needs explicit falsification criteria")
+        if not candidate.rationale:
+            errors.append(f"candidate {candidate.id} needs recorded rationale")
+    return tuple(errors)

@@ -11,10 +11,10 @@ dist/
 site/
 
 # Runtime-generated Automo state
-runs/
-recommendations/
-capability-results/
-.automo/
+/runs/
+/recommendations/
+/capability-results/
+/.automo/
 
 # Local tooling
 .coverage

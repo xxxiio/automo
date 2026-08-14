@@ -1,0 +1,74 @@
+{
+  "analysis": {
+    "arbitrary_subset_search": false,
+    "evaluated_feature_groups": 1,
+    "kind": "bounded-no-feature-ablation",
+    "maximum_feature_groups": 1,
+    "oos_tuning_performed": false,
+    "refit_performed": false
+  },
+  "created_at": "2026-08-03T03:03:40.468989+00:00",
+  "dispositions": [
+    {
+      "ablation_reference": "BASELINE-NAIVE-0001",
+      "description": "The single deterministic local fixture input feature.",
+      "diagnostics": {
+        "out_of_sample_effect": 145.469602040816,
+        "out_of_sample_observations": 2,
+        "validation_effect": 63.640159863945996,
+        "validation_observations": 2
+      },
+      "feature_group_id": "FEATURE-GROUP-CORE-0001",
+      "features": [
+        "feature_1"
+      ],
+      "outcome": "retained",
+      "reasons": [
+        "feature group improved validation and out-of-sample evidence"
+      ]
+    }
+  ],
+  "evidence": {
+    "decision": {
+      "path": "decision.json",
+      "sha256": "b2f25b4fd7d7eb7bdea0dbb12b31d5ad195d90e278eb748ab9c9efd937dc6dd9"
+    },
+    "manifest": {
+      "path": "manifest.json",
+      "sha256": "f660e7e3047abfab569ab04b7ab57ee9280819d66763de9ddd405f0240cb365f"
+    },
+    "out_of_sample": {
+      "path": "out-of-sample.json",
+      "sha256": "b58b31a3fee41dde5ff71e266bdb490721c0518d832c481017256d76dc0d50f1"
+    },
+    "validation": {
+      "path": "validation.json",
+      "sha256": "9afa0269e61122ec2ce7fe6360dfc525fbe0b05c3caa6acdd3e4cde776bc05c3"
+    }
+  },
+  "experiment_id": "EXPERIMENT-0001",
+  "feature_set": {
+    "id": "FEATURESET-CORE-0001",
+    "path": "research/features/FEATURESET-CORE-0001.yaml",
+    "sha256": "2608ac58b1e9637e64e48a777031ab848ce5ffc6a1de93743d7359ace3ee1292"
+  },
+  "policy": {
+    "contract": {
+      "identifier": "POLICY-FEATURE-DISPOSITION-0001",
+      "lower_is_better": true,
+      "maximum_feature_groups": 1,
+      "metric": "mse",
+      "minimum_out_of_sample_harm": 0.0,
+      "minimum_out_of_sample_improvement": 0.0,
+      "minimum_out_of_sample_observations": 2,
+      "minimum_validation_harm": 0.0,
+      "minimum_validation_improvement": 0.0,
+      "minimum_validation_observations": 2
+    },
+    "id": "POLICY-FEATURE-DISPOSITION-0001",
+    "path": "research/policies/POLICY-FEATURE-DISPOSITION-0001.yaml",
+    "sha256": "995096efe5b378558b4f456ea774658484b584f2328ab62cdfdf98f25ee925c6"
+  },
+  "run_id": "experiment-0004-features",
+  "schema_version": 1
+}

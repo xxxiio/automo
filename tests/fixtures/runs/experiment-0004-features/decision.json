@@ -1,0 +1,49 @@
+{
+  "created_at": "2026-08-03T02:55:18.146086+00:00",
+  "diagnostics": {
+    "directional_agreement": true,
+    "oos_degradation_from_validation": 0.0,
+    "out_of_sample_improvement": 145.469602040816,
+    "out_of_sample_observations": 2,
+    "validation_improvement": 63.640159863946,
+    "validation_observations": 2
+  },
+  "evidence": {
+    "manifest": {
+      "path": "manifest.json",
+      "sha256": "1023a8f2f5ed697289baca7cc872d31fed0035b56ffcf8664291f4916bc249f2"
+    },
+    "out_of_sample": {
+      "path": "out-of-sample.json",
+      "sha256": "b58b31a3fee41dde5ff71e266bdb490721c0518d832c481017256d76dc0d50f1"
+    },
+    "validation": {
+      "path": "validation.json",
+      "sha256": "9afa0269e61122ec2ce7fe6360dfc525fbe0b05c3caa6acdd3e4cde776bc05c3"
+    }
+  },
+  "experiment_id": "EXPERIMENT-0001",
+  "outcome": "accepted",
+  "policy": {
+    "contract": {
+      "identifier": "POLICY-REPRODUCIBILITY-FIRST-0001",
+      "lower_is_better": true,
+      "maximum_oos_degradation_from_validation": 100.0,
+      "metric": "mse",
+      "minimum_out_of_sample_improvement": 0.0,
+      "minimum_out_of_sample_observations": 2,
+      "minimum_validation_improvement": 0.0,
+      "minimum_validation_observations": 2,
+      "require_directional_agreement": true
+    },
+    "id": "POLICY-REPRODUCIBILITY-FIRST-0001",
+    "path": "research/policies/POLICY-REPRODUCIBILITY-FIRST-0001.yaml",
+    "sha256": "04e90701f045d896727750489842d19ff2439e69a62cbad0285c6424ee26472e"
+  },
+  "reasons": [
+    "all committed decision-policy gates passed"
+  ],
+  "refit_performed": false,
+  "run_id": "experiment-0004-features",
+  "schema_version": 1
+}

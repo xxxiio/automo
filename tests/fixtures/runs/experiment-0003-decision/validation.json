@@ -1,0 +1,7 @@
+{
+  "baseline_mse": 63.660277777778,
+  "candidate_delta": -63.640159863946,
+  "candidate_mse": 0.020117913832,
+  "observations": 2,
+  "stage": "validation"
+}

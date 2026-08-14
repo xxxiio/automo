@@ -2,7 +2,7 @@ from .calibration import AffineCalibrator, AffineCalibrationModel
 from .contracts import (
     CalibrationPolicy, DataIteration, DataPartition, EvaluationPartitions, ModelPoolSnapshot,
     ModelPoolSpec, ModelRefreshDisposition, RefreshAction, RefreshError, RefreshScoreCard,
-    RetentionPolicy, SelectionKind, SelectionPolicy, TrainingPolicy,
+    RetentionPolicy, SelectionKind, SelectionPolicy, ModelSelector, StructuredCalibrator, TrainingPolicy,
 )
 from .pool import FilesystemPoolStore
 from .service import RefreshService
@@ -13,5 +13,5 @@ __all__ = [
     "DataPartition", "EvaluationPartitions", "FilesystemPoolStore", "GroupSplit", "HashSplit",
     "ModelPoolSnapshot", "ModelPoolSpec", "ModelRefreshDisposition", "OrderedSplit",
     "PredefinedSplit", "RefreshAction", "RefreshError", "RefreshScoreCard", "RefreshService",
-    "RetentionPolicy", "SelectionKind", "SelectionPolicy", "TemporalSplit", "TrainingPolicy",
+    "RetentionPolicy", "SelectionKind", "SelectionPolicy", "ModelSelector", "StructuredCalibrator", "TemporalSplit", "TrainingPolicy",
 ]

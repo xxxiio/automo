@@ -262,4 +262,5 @@ class ResearchPlugin:
     model_trainers: tuple[ModelTrainer, ...] = ()
     evaluators: tuple[Evaluator, ...] = ()
     model_graphs: tuple[ModelGraphSpec, ...] = ()
+    model_selectors: tuple[Any, ...] = ()
     services: Mapping[str, Any] = field(default_factory=dict)

@@ -27,3 +27,7 @@ Project plugins, trainers, evaluators, codecs, calibrators, injected services, a
 ## Release gate
 
 The release candidate must pass the full test suite, source compilation, all runnable examples, wheel and sdist build/install smoke tests, and the repository pre-commit configuration in CI, plus the test suite across all supported Python versions.
+
+## Agent research governance
+
+The public alpha includes packaged agent-facing research guidance, `.automo/` milestone/plan-mode governance, and an optional bounded GetDone capability handoff. GetDone development state remains separate under `.agent/`.

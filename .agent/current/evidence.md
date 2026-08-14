@@ -18,24 +18,25 @@ TASK-0016 — Prepare and verify the Automo 0.3.0a1 public-alpha release candida
 
 | Criterion ID | Status | Evidence |
 |---|---|---|
-| AC-001 | pass | 93-test suite and offline wheel/sdist health gate |
+| AC-001 | pass | 104-test suite, clean Git checkout simulation, and offline wheel/sdist health gate |
 | AC-002 | pass | persistence/API/security/onboarding files and tests |
 | AC-003 | pass | `.github/workflows/ci.yml` executes pre-commit once and tests 3.11/3.12/3.13 separately |
-| AC-004 | not-run | connected CI is unavailable from this environment |
+| AC-004 | not-run | prior connected CI run failed because `tests/fixtures/runs` was ignored and editable-install metadata tripped source hygiene; fixes are locally verified and require a connected rerun |
 
 ## Quality gate evidence
 
 | Gate | Status | Command or artefact | Result |
 |---|---|---|---|
-| Tests | pass | `python -m pytest -q` | 93 passed |
+| Tests | pass | `python -m pytest -q` | 104 passed on Python 3.13 |
 | Compilation | pass | `python -m compileall -q src tests scripts examples` | passed |
 | Wheel/sdist | pass | `python scripts/health_gate.py --keep-dist` | both clean-install smoke paths passed |
 | Pre-commit/Ruff | not-run | `.pre-commit-config.yaml` / CI | local dependency provisioning blocked by offline DNS |
+| Clean Git simulation | pass | initialize Git, `git add -A`, create ignored `src/automo.egg-info`, run source check and pytest | 20 fixture files tracked, root `runs/` ignored, source-check passed, 104 tests passed |
 | GetDone 1.1.2 | pass | validator command | 27 managed files, 0 errors, 10 expected warnings |
 
 ## Checks not run
 
-- Connected GitHub Actions Python 3.11–3.13 test matrix and pre-commit/Ruff quality job; this environment cannot access PyPI/GitHub to provision hook dependencies.
+- Connected GitHub Actions rerun on the corrected commit. The previous run exposed release-candidate source-boundary bugs now fixed locally.
 
 ## Waivers
 

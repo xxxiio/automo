@@ -1,0 +1,43 @@
+{
+  "compute_cost": 0.0,
+  "configuration_fingerprint": "13343c97ffabf4c31e654bdc6c49e2c9c4aefe9528a2c66836b869fb2ea748e5",
+  "duration_ms": 0.029,
+  "environment": {
+    "implementation": "CPython",
+    "platform": "Linux-6.12.13-x86_64-with-glibc2.41",
+    "python": "3.13.5"
+  },
+  "experiment_id": "EXPERIMENT-0001",
+  "fitted_state": {
+    "baseline_mean": 6.016666666666667,
+    "candidate": {
+      "coefficient": 1.9742857142857142,
+      "intercept": 1.0809523809523816
+    }
+  },
+  "frozen_at": "2026-08-03T02:48:15.613795+00:00",
+  "inputs": {
+    "baseline": "BASELINE-NAIVE-0001",
+    "candidate_model": "MODEL-LINEAR-0001",
+    "data_path": "data/local-fixture.csv",
+    "data_sha256": "9608f9a2396898f432410597a95846fc24f56aa1177b2ebaf5e46e8601e4f204",
+    "experiment_path": "research/experiments/EXPERIMENT-0001.yaml",
+    "experiment_sha256": "651af07beb1c988fcfcba7eb9c842e80d125fc938333524547a65e34454fe67c",
+    "feature_set": "FEATURESET-CORE-0001",
+    "runner_sha256": "76558ff27f224085581fbec6afaf7dbae51412fa95431ffd8dc64ada2a305d2e",
+    "split_spec": "SPLIT-WALK-FORWARD-0001"
+  },
+  "run_id": "experiment-0002-freeze",
+  "schema_version": 1,
+  "seed": 42,
+  "split": {
+    "out_of_sample": 2,
+    "training": 6,
+    "validation": 2
+  },
+  "status": "frozen",
+  "validation": {
+    "path": "validation.json",
+    "sha256": "9afa0269e61122ec2ce7fe6360dfc525fbe0b05c3caa6acdd3e4cde776bc05c3"
+  }
+}

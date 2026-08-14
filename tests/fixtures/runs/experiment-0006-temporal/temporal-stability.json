@@ -1,0 +1,96 @@
+{
+  "aggregate": {
+    "directional_agreement": true,
+    "mean_out_of_sample_delta": -102.754867346939,
+    "mean_validation_delta": -38.838386621315,
+    "out_of_sample_improved_folds": 3,
+    "validation_improved_folds": 3
+  },
+  "arbitrary_trial_search": false,
+  "committed_folds_only": true,
+  "compute_cost": 0.0,
+  "configuration_fingerprint": "308da12fff2a539b2096bb1f33443c2f71eeeefe1a29ee02ade669fc52d99dcf",
+  "experiment_id": "EXPERIMENT-0002",
+  "folds": [
+    {
+      "fold_id": "FOLD-001",
+      "order": 1,
+      "out_of_sample": {
+        "baseline_mse": 64.7225,
+        "candidate_delta": -63.2825,
+        "candidate_mse": 1.44,
+        "observations": 2
+      },
+      "out_of_sample_year": 2022,
+      "training_end_year": 2020,
+      "training_observations": 2,
+      "validation": {
+        "baseline_mse": 15.9325,
+        "candidate_delta": -15.6825,
+        "candidate_mse": 0.25,
+        "observations": 2
+      },
+      "validation_year": 2021
+    },
+    {
+      "fold_id": "FOLD-002",
+      "order": 2,
+      "out_of_sample": {
+        "baseline_mse": 99.725,
+        "candidate_delta": -99.5125,
+        "candidate_mse": 0.2125,
+        "observations": 2
+      },
+      "out_of_sample_year": 2023,
+      "training_end_year": 2021,
+      "training_observations": 4,
+      "validation": {
+        "baseline_mse": 37.325,
+        "candidate_delta": -37.1925,
+        "candidate_mse": 0.1325,
+        "observations": 2
+      },
+      "validation_year": 2022
+    },
+    {
+      "fold_id": "FOLD-003",
+      "order": 3,
+      "out_of_sample": {
+        "baseline_mse": 145.523611111111,
+        "candidate_delta": -145.469602040816,
+        "candidate_mse": 0.054009070295,
+        "observations": 2
+      },
+      "out_of_sample_year": 2024,
+      "training_end_year": 2022,
+      "training_observations": 6,
+      "validation": {
+        "baseline_mse": 63.660277777778,
+        "candidate_delta": -63.640159863946,
+        "candidate_mse": 0.020117913832,
+        "observations": 2
+      },
+      "validation_year": 2023
+    }
+  ],
+  "inputs": {
+    "candidate_model": "MODEL-LINEAR-0001",
+    "data_path": "data/local-fixture.csv",
+    "data_sha256": "9608f9a2396898f432410597a95846fc24f56aa1177b2ebaf5e46e8601e4f204",
+    "evaluation_spec": "EVALUATION-TEMPORAL-STABILITY-0001",
+    "experiment_path": "research/experiments/EXPERIMENT-0002.yaml",
+    "experiment_sha256": "c768aae544f3dea4516874af464e68acba9ddc62d2ad7dbb15241c1e0e895eb3",
+    "feature_set": "FEATURESET-CORE-0001",
+    "split_spec": "SPLIT-PREDEFINED-TEMPORAL-FOLDS-0001"
+  },
+  "refit_scope": "once per committed fold using training rows only",
+  "run_id": "experiment-0006-temporal",
+  "schema_version": 1,
+  "trial_budget": 3,
+  "trial_order": [
+    "FOLD-001",
+    "FOLD-002",
+    "FOLD-003"
+  ],
+  "trials_executed": 3
+}

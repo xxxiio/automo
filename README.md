@@ -60,7 +60,7 @@ Small synthetic examples are under `examples/`:
 - `id-only-data` — deterministic splitting without timestamps.
 - `end-to-end` — a compact project/runtime/registry walkthrough.
 
-Start with [Getting started](docs/getting-started.md), then see [Public API](docs/public-api.md), [Trainers and graphs](docs/trainers-and-graphs.md), [Model registry](docs/model-registry.md), [Refresh](docs/refresh.md), and [Bounded research](docs/research.md).
+Start with [Getting started](docs/getting-started.md), then see [Agent research guidance](docs/agent-guidance.md), [Public API](docs/public-api.md), [Trainers and graphs](docs/trainers-and-graphs.md), [Model registry](docs/model-registry.md), [Refresh](docs/refresh.md), and [Bounded research](docs/research.md).
 
 ## Alpha status
 
@@ -73,3 +73,8 @@ Automo does not sandbox project plugins, trainers, evaluators, codecs, calibrato
 ## Development workflow
 
 This repository uses pre-commit as the canonical source-quality gate. Ruff formatting and linting are configured as pre-commit hooks, and CI runs the same hooks. GetDone project records under `.agent/` are development metadata for this repository and are not required at runtime.
+
+
+## Project-specific research guidance
+
+Keep mutable research state under `.automo/` and project-owned agent instructions under `.project-agent/automo/`. `automo guidance` discovers `.project-agent/automo/index.json` additively by default; use `--no-project-agent` for canonical Automo-only guidance. Pin a reviewed composition with `automo guidance-lock --write` and verify it with `automo guidance-check`. Project guidance may strengthen or specialize research rules but cannot replace protected sealed-OOS, bounded-search, evidence, or milestone-governance rules.

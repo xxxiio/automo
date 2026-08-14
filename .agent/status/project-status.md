@@ -11,13 +11,18 @@ status: current
 
 ## Current state
 
-MILESTONE-0013 is active. The `0.3.0a1` public-alpha release candidate passes all locally executable source, test, example, wheel, and sdist gates.
+MILESTONE-0013 is active. The `0.3.0a1` public-alpha candidate now includes completed MILESTONE-0014 through MILESTONE-0016 research governance, guidance completeness, project-agent composition, and consumer-compatibility hardening; connected CI remains the release gate.
 
 ## Current milestone
 
 MILESTONE-0013 — Public alpha hardening.
 
 ## Recently completed
+
+- Completed MILESTONE-0016: GetDone-style `.project-agent/` research extensions, composition locks, generalized provenance/pools/selectors, state-schema checks, agent-plan conformance, and xihbm compatibility evidence.
+
+- Completed MILESTONE-0015: deeper diagnosis, multiple-testing/selection-bias, early-stopping, meta-model ablation/OOF guidance, adherence gates, and a sequential research walkthrough.
+- Completed MILESTONE-0014: `.automo/` research governance, `automo guidance`, and bounded GetDone capability handoff.
 
 - Removed legacy package/CLI identity and generated source-tree artifacts.
 - Added versioned public persistence envelopes and one package-version source.
@@ -37,11 +42,11 @@ MILESTONE-0013 — Public alpha hardening.
 
 - Pre-commit is the canonical Ruff lint/format quality gate; CI must run the same hooks.
 - Public examples remain synthetic and domain-neutral.
-- No additional research features are added before external alpha feedback.
+- Agent research governance, guidance completeness, project-specific extension composition, and consumer compatibility are explicit public-alpha blockers and are now locally satisfied through MILESTONE-0016.
 
 ## Project health
 
-- 93 tests pass locally.
+- 119 tests pass locally.
 - Offline wheel/sdist release health gate passes.
 - GetDone 1.1.2 validates 27 managed files with 0 errors and 10 expected project-owned warnings.
 

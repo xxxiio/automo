@@ -202,7 +202,7 @@ class GraphRuntime:
                 data_source_id=data_source_id,
                 data_snapshot_id=data_snapshot_id,
                 data_snapshot_hash=data_snapshot_hash,
-                feature_set_id=spec.feature_set or "<graph-inputs>",
+                feature_set_id=spec.feature_set,
                 model_spec_id=spec.id,
                 objective_id=spec.objective.id,
                 runner_implementation=spec.implementation,
@@ -214,7 +214,7 @@ class GraphRuntime:
             )
             manifest = registry.register_model(
                 artifact, implementation=spec.implementation, model_spec_id=spec.id,
-                objective_id=spec.objective.id, feature_set_id=spec.feature_set or "<graph-inputs>",
+                objective_id=spec.objective.id, feature_set_id=spec.feature_set,
                 provenance=provenance, codec=codec,
             )
             registered[node.id] = manifest.id

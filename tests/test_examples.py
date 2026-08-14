@@ -13,6 +13,7 @@ def test_onboarding_examples_run() -> None:
         "structured-output/example.py",
         "id-only-data/example.py",
         "end-to-end/example.py",
+        "research-guidance/example.py",
     ]
     env = os.environ.copy()
     env["PYTHONPATH"] = str(root / "src") + os.pathsep + env.get("PYTHONPATH", "")

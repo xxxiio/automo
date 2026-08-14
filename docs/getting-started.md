@@ -81,3 +81,23 @@ automo models --help
 ```
 
 Read `trainers-and-graphs.md` before implementing a downstream/meta-model so the cross-fitting boundary is clear.
+
+## Plan the first research milestone
+
+A fresh project starts in research plan mode. Load the agent guidance and define a bounded scientific question before executing automated research:
+
+```bash
+automo guidance --task-class milestone-planning
+automo research milestone-create R001 \
+  --question "Does the candidate improve the committed objective?" \
+  --why-next "It is the highest-value unresolved question." \
+  --exit-criterion "candidate evaluated" \
+  --exit-criterion "conclusion recorded"
+```
+
+Advance through `planning`, `approved`, and `active` only after the research boundary is committed. See [Research governance](research-governance.md) and [Agent guidance](agent-guidance.md).
+
+
+## Project-specific research guidance
+
+Keep mutable research state under `.automo/` and project-owned agent instructions under `.project-agent/automo/`. `automo guidance` discovers `.project-agent/automo/index.json` additively by default; use `--no-project-agent` for canonical Automo-only guidance. Pin a reviewed composition with `automo guidance-lock --write` and verify it with `automo guidance-check`. Project guidance may strengthen or specialize research rules but cannot replace protected sealed-OOS, bounded-search, evidence, or milestone-governance rules.

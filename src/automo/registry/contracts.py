@@ -39,7 +39,7 @@ class TrainingProvenance:
     data_source_id: str
     data_snapshot_id: str
     data_snapshot_hash: str | None
-    feature_set_id: str
+    feature_set_id: str | None
     model_spec_id: str
     objective_id: str
     runner_implementation: str
@@ -66,7 +66,7 @@ class ModelManifest:
     implementation: str
     model_spec_id: str
     objective_id: str
-    feature_set_id: str
+    feature_set_id: str | None
     artifact_codec: str
     artifact_path: str
     artifact_hash: str
@@ -167,7 +167,7 @@ class ModelRegistry(Protocol):
         implementation: str,
         model_spec_id: str,
         objective_id: str,
-        feature_set_id: str,
+        feature_set_id: str | None,
         provenance: TrainingProvenance,
         codec: ModelArtifactCodec,
         model_id: str | None = None,

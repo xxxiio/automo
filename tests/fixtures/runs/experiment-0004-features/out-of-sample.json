@@ -1,0 +1,7 @@
+{
+  "baseline_mse": 145.523611111111,
+  "candidate_delta": -145.469602040816,
+  "candidate_mse": 0.054009070295,
+  "observations": 2,
+  "stage": "out-of-sample"
+}

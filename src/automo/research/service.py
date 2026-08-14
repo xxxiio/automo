@@ -180,7 +180,7 @@ class ResearchService:
             return
         capability = reason.split("missing capability:", 1)[1].strip()
         request_id = f"CAPABILITY-{plan.id}-{proposal.id}"
-        root = self.store.root.parent.parent / "research" / "capabilities" / "requests"
+        root = self.store.root.parent / "capabilities" / "requests"
         root.mkdir(parents=True, exist_ok=True)
         path = root / f"{request_id}.yaml"
         if path.exists():
@@ -195,7 +195,7 @@ class ResearchService:
             "acceptance": ["tests pass", "research evidence remains unchanged"],
             "scope": {
                 "allowed_paths": ["src", "tests", "automo.toml"],
-                "forbidden_paths": ["runs", "recommendations", ".automo/research"],
+                "forbidden_paths": ["runs", "recommendations", ".automo"],
             },
         }
         write_yaml_artifact(path, artifact_type="automo.capability_request", payload=payload)
@@ -304,13 +304,13 @@ class ResearchService:
         import platform
         provenance = TrainingProvenance(
             data_source_id=data_source_id, data_snapshot_id=snapshot.id, data_snapshot_hash=snapshot.content_hash,
-            feature_set_id=spec.feature_set or "<custom-inputs>", model_spec_id=spec.id, objective_id=spec.objective.id,
+            feature_set_id=spec.feature_set, model_spec_id=spec.id, objective_id=spec.objective.id,
             runner_implementation=spec.implementation, python_version=platform.python_version(), seed=None,
             code_revision=self.runtime._git_revision(),
         )
         manifest = self.registry.register_model(
             model, implementation=spec.implementation, model_spec_id=spec.id, objective_id=spec.objective.id,
-            feature_set_id=spec.feature_set or "<custom-inputs>", provenance=provenance, codec=codec,
+            feature_set_id=spec.feature_set, provenance=provenance, codec=codec,
         )
         return manifest.id
 

@@ -528,7 +528,7 @@ None
 - [x] EC-005: Supported public extension imports are documented and tested.
 - [x] EC-006: Trusted-code extension/model-artifact boundaries are documented.
 - [x] EC-007: Fresh `automo init` projects validate and pass doctor.
-- [x] EC-008: Six synthetic onboarding examples run.
+- [x] EC-008: Seven synthetic onboarding examples run.
 - [x] EC-009: Common CLI missing-ID failures are controlled and traceback-free.
 - [x] EC-010: Wheel clean-install smoke passes.
 - [x] EC-011: Sdist clean-install smoke passes.
@@ -545,7 +545,7 @@ None
 - EC-005: `src/automo/__init__.py`, `docs/public-api.md`, and public API tests.
 - EC-006: `SECURITY.md` and `docs/release-contract.md`.
 - EC-007: fresh init/validate/doctor public release test and wheel/sdist smoke.
-- EC-008: `tests/test_examples.py` and six synthetic example directories.
+- EC-008: `tests/test_examples.py` and seven synthetic example directories.
 - EC-009: common missing-ID controlled CLI error test.
 - EC-010: wheel clean-install branch of `scripts/health_gate.py`.
 - EC-011: sdist clean-install branch of `scripts/health_gate.py`.
@@ -557,8 +557,127 @@ None
 
 none
 
+### MILESTONE-0014 — Agent research guidance and governance
+
+- **Status:** completed
+- **Outcome:** Automo supplies deterministic agent-facing research guidance, `.automo/` milestone/plan-mode governance, and a bounded optional GetDone development handoff without sharing state ownership.
+- **Why now:** Public-alpha review exposed that the deterministic research engine lacked the agent reasoning/governance layer required for autonomous but bounded research.
+- **Depends on:** MILESTONE-0012
+
+#### Scope
+
+- Packaged workflows, standards, acceptance gates, policies, references, and handoff contract for research agents.
+- `automo guidance` task-specific minimal selection.
+- `.automo/` research project, roadmap, current plan, milestone, and next-step state.
+- Research milestone lifecycle with plan mode and active execution guard.
+- Capability requests/results/handoffs under `.automo/capabilities/` with `.agent/` reserved for GetDone.
+
+#### Non-goals
+
+- New model algorithms, broader search methods, automatic GetDone project mutation, deployment, or domain-specific research rules.
+
+#### Exit criteria
+
+- [x] EC-001: Fresh init creates `.automo/` research governance in plan mode.
+- [x] EC-002: Milestones follow proposed → planning → approved → active → concluded with accepted/rejected/inconclusive/invalid outcomes.
+- [x] EC-003: Governed automated research refuses execution outside an active milestone.
+- [x] EC-004: `automo guidance` emits a minimal task-specific installed research guidance set.
+- [x] EC-005: Guidance covers experiment design, diagnosis, features, calibration, meta-model leakage, refresh, conclusion, and capability handoff.
+- [x] EC-006: Capability requests/results/handoffs live under `.automo/`; GetDone development state remains `.agent/`.
+- [x] EC-007: GetDone handoff is explicit, bounded, and does not cause Automo to write `.agent/`.
+- [x] EC-008: Human docs explain governance, guidance, and GetDone composition.
+- [x] EC-009: Full regression and installed-wheel guidance checks pass.
+
+#### Evidence
+
+- EC-001: `src/automo/governance.py` init contract and `test_init_creates_automo_research_governance`.
+- EC-002: milestone transition/outcome contracts and `test_milestone_lifecycle_and_plan_mode`.
+- EC-003: `ResearchGovernance.require_execution_ready` and plan-mode guard test.
+- EC-004: `src/automo/guidance.py`, packaged `src/automo/skill/`, and guidance CLI tests.
+- EC-005: workflow/standard/policy/reference files under `src/automo/skill/`.
+- EC-006: `.automo/capabilities/` request/result paths in research/capability services.
+- EC-007: `create_getdone_handoff`, `automo capability handoff`, and ownership test.
+- EC-008: `docs/research-governance.md`, `docs/agent-guidance.md`, README, getting-started, and release contract.
+- EC-009: `python -m pytest -q` reported 102 passed; installed-wheel guidance smoke emitted the expected meta-model guidance paths.
+
+#### Next milestone
+
+MILESTONE-0013
+
+### MILESTONE-0015 — Research guidance completeness and agent safety
+
+- **Status:** completed
+- **Outcome:** Automo's first-alpha agent guidance includes bounded diagnosis, multiple-testing/selection-bias handling, early stopping, meta-model ablation/OOF rules, refresh decisions, adherence gates, and executable validation.
+- **Why now:** Pre-alpha review concluded the M14 guidance architecture needed deeper methodology and agent-reliability checks before publication.
+- **Depends on:** MILESTONE-0014
+
+#### Scope
+
+- Diagnosis and intervention-selection guidance.
+- Multiple-testing/selection-bias and early-stopping policies.
+- Meta-model incremental-value/ablation safety.
+- Refresh-vs-research guidance and inconclusive outcomes.
+- Guidance-pack validation, CLI drift tests, and sequential walkthrough.
+
+#### Non-goals
+
+- New algorithms, domain-specific statistical guarantees, or broader automated search.
+
+#### Exit criteria
+
+- [x] EC-001: Every task class resolves to bounded valid guidance.
+- [x] EC-002: Multiple testing/selection bias is explicit.
+- [x] EC-003: Early stopping/diminishing returns is explicit.
+- [x] EC-004: Common diagnosis failure modes are covered.
+- [x] EC-005: Meta-model OOF/ablation/incremental-value rules are covered.
+- [x] EC-006: Refresh/lifecycle action is distinguished from new research.
+- [x] EC-007: Negative agent-adherence scenarios are explicit.
+- [x] EC-008: Documented CLI paths are tested.
+- [x] EC-009: Multi-milestone synthetic walkthrough passes.
+- [x] EC-010: Full local regression passes (110 tests).
+
+#### Evidence
+
+- EC-001: `validate_guidance_pack` and task-class coverage tests.
+- EC-002: `skill/policies/multiple-testing.md` and high-risk task routing tests.
+- EC-003: `skill/policies/early-stopping.md` and milestone/experiment workflow coverage.
+- EC-004: `skill/standards/diagnosis.md`, diagnosis patterns, and intervention decision table.
+- EC-005: expanded meta-model workflow/reference plus leakage guidance selection tests.
+- EC-006: expanded refresh-analysis workflow and intervention decision table.
+- EC-007: `skill/acceptance/agent-adherence.md` and failure-mode coverage test.
+- EC-008: documented command existence test against the Typer CLI tree.
+- EC-009: `examples/research-guidance/` walkthrough and executable example test.
+- EC-010: `python -m pytest -q` reported 110 passed.
+
+#### Next milestone
+
+MILESTONE-0013
+
 ## Deferred work
 
 - Public model-source discovery — reconsider after local lifecycle infrastructure is mature.
 - Automated production deployment — remains out of scope until separately planned.
 
+
+
+### MILESTONE-0016 — Consumer compatibility and project-agent composition hardening
+
+- **Status:** completed
+- **Outcome:** Project-owned `.project-agent/` research rules compose deterministically with Automo guidance, extension contracts support thin domain adapters, and a real xihbm compatibility fixture was checked.
+- **Why now:** User-approved pre-alpha hardening before release CI.
+- **Depends on:** MILESTONE-0015
+
+#### Exit criteria
+
+- [x] EC-001: Project-agent composition, locking, and validation are operational.
+- [x] EC-002: Provenance/pool/selector/calibration extension contracts are generalized.
+- [x] EC-003: Research-plan conformance and state-schema checks are enforced.
+- [x] EC-004: xihbm compatibility boundary is demonstrated with relevant tests.
+
+#### Evidence
+
+- `tests/test_m16_compatibility.py`, 119-test full regression, 19-test xihbm compatibility subset, and GetDone 1.1.2 project validation.
+
+#### Next milestone
+
+MILESTONE-0013 resumes for connected CI/pre-commit release evidence.

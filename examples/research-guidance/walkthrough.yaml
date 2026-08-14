@@ -1,0 +1,53 @@
+project: synthetic-guidance-walkthrough
+objective: minimize synthetic prediction error without sealed-OOS leakage
+milestones:
+  - id: R001
+    question: Does adding the bounded interaction feature improve validation materially?
+    diagnosis: baseline is stable but underfits a known interaction pattern
+    plan:
+      maximum_candidates: 2
+      maximum_oos_candidates: 0
+      materiality_threshold: 0.02
+      intervention: add interaction feature only
+    experiments:
+      - id: E001
+        result: validation_improvement_below_threshold
+        decision: rejected
+    conclusion: rejected
+    next_step: investigate whether model capacity rather than feature information is limiting
+  - id: R002
+    question: Does a bounded nonlinear model improve the objective without temporal instability?
+    diagnosis: feature information is present but the linear baseline cannot represent it
+    plan:
+      maximum_candidates: 2
+      maximum_oos_candidates: 1
+      materiality_threshold: 0.02
+      intervention: replace model family only
+    experiments:
+      - id: E002
+        result: validation_improvement_material_and_stable
+        decision: shortlist
+      - id: E003
+        result: sealed_oos_improvement_material
+        decision: accepted
+    conclusion: accepted
+    next_step: evaluate whether calibration is still adequate on the retained candidate
+  - id: R003
+    question: Does recalibration improve probability quality without reducing downstream utility?
+    diagnosis: ranking is stable but calibration evidence is weak
+    plan:
+      maximum_candidates: 1
+      maximum_oos_candidates: 1
+      materiality_threshold: 0.01
+      intervention: recalibration only
+    experiments:
+      - id: E004
+        result: calibration_improves_but_downstream_utility_declines
+        decision: rejected
+    conclusion: rejected
+    next_step: conclude the current research sequence with the uncalibrated retained model
+forbidden_actions:
+  - use sealed OOS to generate a candidate
+  - omit failed candidates from history
+  - widen a search after observing weak validation without a new approved plan
+  - replace model and feature family in one unplanned intervention

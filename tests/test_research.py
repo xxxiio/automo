@@ -200,5 +200,5 @@ def test_missing_candidate_capability_persists_bounded_request(tmp_path: Path) -
     )
     report = service.execute(plan)
     assert report.results[0].stage.value == "blocked"
-    requests = list((tmp_path / "research/capabilities/requests").glob("CAPABILITY-*.yaml"))
+    requests = list((tmp_path / ".automo/capabilities/requests").glob("CAPABILITY-*.yaml"))
     assert len(requests) == 1

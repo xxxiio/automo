@@ -1,6 +1,17 @@
 # Changelog
 
-## 0.3.0a1 — First public alpha
+### Agent research governance and safety
+
+- Added `.automo/` project-owned research governance with milestone plan/research modes.
+- Added `automo guidance` and a packaged task-specific research guidance pack.
+- Added research milestone lifecycle commands and execution guards.
+- Added diagnosis, multiple-testing/selection-bias, early-stopping, meta-model ablation/OOF, refresh decision, and agent-adherence guidance.
+- Added deterministic guidance-pack validation and a synthetic multi-milestone research walkthrough.
+- Moved generated capability requests/results under `.automo/capabilities/` and added bounded GetDone handoff briefs without mutating `.agent/`.
+
+## 0.3.0a1
+
+- Added GetDone-style `.project-agent/` research-guidance composition and lock verification, generalized model provenance/pool extension contracts, and consumer compatibility hardening. — First public alpha
 
 ### Added
 
@@ -13,7 +24,7 @@
 - Versioned public persistence envelopes with `artifact_type` and `schema_version`.
 - Minimal fresh-project scaffolding through `automo init`.
 - Public API, security, getting-started, trainer/graph, registry, refresh, and research documentation.
-- Six small synthetic onboarding examples, including a compact end-to-end registry walkthrough.
+- Seven small synthetic onboarding examples, including compact end-to-end registry and agent-guidance walkthroughs.
 
 ### Changed
 

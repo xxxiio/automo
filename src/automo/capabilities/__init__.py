@@ -10,6 +10,7 @@ from automo.capabilities.service import (
     CapabilityAttemptResult,
     CapabilityLifecycleError,
     WorkflowFulfillment,
+    create_getdone_handoff,
     fulfill_capability,
     inspect_capability,
 )
@@ -17,6 +18,7 @@ from automo.capabilities.service import (
 __all__ = [
     "CapabilityAttemptResult",
     "CapabilityLifecycleError",
+    "create_getdone_handoff",
     "CapabilityRequest",
     "CapabilityResultStatus",
     "CapabilityScope",

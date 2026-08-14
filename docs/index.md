@@ -12,4 +12,6 @@ Automo is a domain-neutral framework for deterministic model research, lifecycle
 - [Model registry](model-registry.md)
 - [Refresh lifecycle](refresh.md)
 - [Bounded research](research.md)
+- [Research governance](research-governance.md)
+- [Agent research guidance](agent-guidance.md)
 - [Public alpha release contract](release-contract.md)

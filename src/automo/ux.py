@@ -17,6 +17,8 @@ from automo.contracts import ContractError, ExperimentSpec, load_experiment
 from automo.execution import run_temporal_stability
 from automo.execution.local import ExecutionError
 from automo.integrations.getdone import GetDoneCapabilityWorkflow
+from automo.governance import ResearchGovernance
+from automo.guidance import guidance_lock, validate_project_agent
 from automo.project import ResearchProject
 from automo.runtime.plugin import PluginLoadError, load_project_plugin
 
@@ -58,11 +60,15 @@ class DoctorCheck:
 
 def package_version() -> str:
     try:
-        return importlib.metadata.version("automo")
-    except importlib.metadata.PackageNotFoundError:
-        from automo import __version__
+        installed = importlib.metadata.version("automo")
+        if installed:
+            return installed
+    except (importlib.metadata.PackageNotFoundError, KeyError):
+        pass
 
-        return __version__
+    from automo import __version__
+
+    return __version__
 
 
 def initialise_mr_project(root: Path) -> tuple[Path, ...]:
@@ -75,7 +81,6 @@ def initialise_mr_project(root: Path) -> tuple[Path, ...]:
         Path("research/experiments"),
         Path("research/features"),
         Path("research/policies"),
-        Path("research/capabilities/requests"),
         Path("data"),
     )
     for relative in directories:
@@ -111,6 +116,23 @@ def initialise_mr_project(root: Path) -> tuple[Path, ...]:
         if not path.exists():
             path.write_text(content, encoding="utf-8")
             created.append(relative)
+    created.extend(ResearchGovernance(root).initialise())
+    project_agent = root / ".project-agent" / "automo"
+    if not project_agent.exists():
+        project_agent.mkdir(parents=True)
+        created.append(project_agent.relative_to(root))
+    agent_baseline = project_agent / "AGENTS.md"
+    if not agent_baseline.exists():
+        agent_baseline.write_text(
+            "# Project-specific Automo research guidance\n\n"
+            "Add durable project research rules here. Keep mutable research state in `.automo/`.\n",
+            encoding="utf-8",
+        )
+        created.append(agent_baseline.relative_to(root))
+    agent_index = project_agent / "index.json"
+    if not agent_index.exists():
+        agent_index.write_text('{\n  "schema_version": 1,\n  "infer": [],\n  "rules": []\n}\n', encoding="utf-8")
+        created.append(agent_index.relative_to(root))
     return tuple(created)
 
 
@@ -231,6 +253,16 @@ def validate_project(root: Path) -> tuple[bool, tuple[str, ...], tuple[str, ...]
             load_experiment(experiment_path)
         except (ContractError, OSError, ValueError) as exc:
             errors.append(str(exc))
+
+    governance_errors = ResearchGovernance(root).validate()
+    errors.extend(governance_errors)
+    errors.extend(validate_project_agent(root))
+    if (root / ".project-agent" / "automo").is_dir():
+        lock_status, _ = guidance_lock(root)
+        if lock_status == "missing":
+            warnings.append("Automo guidance composition is not pinned; run automo guidance-lock --write after review")
+        elif lock_status != "current":
+            errors.append(f"Automo guidance composition is {lock_status}; review and rewrite the guidance lock")
 
     if (root / ".agent").is_dir():
         try:

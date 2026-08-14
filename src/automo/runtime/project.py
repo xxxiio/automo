@@ -126,7 +126,7 @@ class ResearchRuntime:
                 services=self.plugin.services, seed=seed, partition_id="fit",
             )
         )
-        feature_set_id = spec.feature_set or "<custom-inputs>"
+        feature_set_id = spec.feature_set
         provenance = TrainingProvenance(
             data_source_id=data_source_id, data_snapshot_id=snapshot.id,
             data_snapshot_hash=snapshot.content_hash, feature_set_id=feature_set_id,

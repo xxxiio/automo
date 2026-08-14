@@ -41,7 +41,9 @@ class CapabilityAttemptResult:
 
 
 def capability_request_path(root: Path, request_id: str) -> Path:
-    return root / "research" / "capabilities" / "requests" / f"{request_id}.yaml"
+    governed = root / ".automo" / "capabilities" / "requests" / f"{request_id}.yaml"
+    legacy = root / "research" / "capabilities" / "requests" / f"{request_id}.yaml"
+    return governed if governed.is_file() or not legacy.is_file() else legacy
 
 
 def inspect_capability(root: Path, request_id: str, delegate: CapabilityDelegate) -> dict[str, object]:
@@ -70,7 +72,7 @@ def fulfill_capability(
     delegate: CapabilityDelegate,
 ) -> CapabilityAttemptResult:
     request = _load_request(root, request_id)
-    result_dir = root / "capability-results" / request.identifier / attempt_id
+    result_dir = root / ".automo" / "capabilities" / "results" / request.identifier / attempt_id
     if result_dir.exists():
         raise CapabilityLifecycleError(f"capability attempt already exists: {result_dir}")
 
@@ -148,6 +150,47 @@ def fulfill_capability(
     )
 
 
+
+def create_getdone_handoff(root: Path, request_id: str) -> Path:
+    """Persist a read-only handoff brief for a GetDone-managed development iteration."""
+    request = _load_request(root, request_id)
+    handoff_dir = root / ".automo" / "capabilities" / "handoffs"
+    handoff_dir.mkdir(parents=True, exist_ok=True)
+    path = handoff_dir / f"{request.identifier}-getdone.md"
+    if path.exists():
+        return path
+    lines = [
+        f"# GetDone capability handoff — {request.identifier}",
+        "",
+        "Automo remains authoritative for `.automo/` research state. GetDone may use `.agent/` for development state but must not rewrite Automo research evidence or decisions.",
+        "",
+        "## Requested capability",
+        f"- Capability: `{request.capability_id}`",
+        f"- Kind: `{request.kind}`",
+        f"- Requested by experiment: `{request.experiment}`",
+        f"- Reason: {request.reason}",
+        "",
+        "## Requirements",
+        *[f"- {item}" for item in request.requirements],
+        "",
+        "## Acceptance",
+        *[f"- {item}" for item in request.acceptance],
+        "",
+        "## Change boundary",
+        "Allowed paths:",
+        *[f"- `{item}`" for item in request.scope.allowed_paths],
+        "",
+        "Forbidden paths:",
+        *[f"- `{item}`" for item in request.scope.forbidden_paths],
+        "- `.automo/` research state and evidence",
+        "",
+        "## GetDone usage",
+        "Use the current GetDone `guidance` command to load the minimum development guidance for the implementation task, then manage implementation state under `.agent/`. After implementation, return concrete changed-file and test evidence to Automo for independent capability validation.",
+        "",
+    ]
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path
+
 def _load_request(root: Path, request_id: str) -> CapabilityRequest:
     try:
         request = load_capability_request(capability_request_path(root, request_id))
@@ -184,6 +227,7 @@ def _protected_hashes(root: Path) -> dict[str, str]:
         root / "research" / "experiments",
         root / "research" / "objectives",
         root / "research" / "policies",
+        root / ".automo",
     )
     hashes: dict[str, str] = {}
     for protected_root in protected_roots:
@@ -201,7 +245,7 @@ def _sha256(path: Path) -> str:
 
 def _workspace_snapshot(root: Path) -> dict[str, bytes]:
     snapshot: dict[str, bytes] = {}
-    excluded = {".git", ".pytest_cache", "__pycache__", "capability-results"}
+    excluded = {".git", ".pytest_cache", "__pycache__", ".agent"}
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         relative_path = path.relative_to(root)
         if any(part in excluded for part in relative_path.parts):
@@ -227,7 +271,7 @@ def _restore_workspace(root: Path, before: dict[str, bytes]) -> None:
 
 
 def _persisted_attempts(root: Path, request_id: str) -> list[dict[str, str]]:
-    request_root = root / "capability-results" / request_id
+    request_root = root / ".automo" / "capabilities" / "results" / request_id
     attempts: list[dict[str, str]] = []
     if not request_root.exists():
         return attempts

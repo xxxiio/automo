@@ -87,7 +87,7 @@ class FilesystemModelRegistry:
         implementation: str,
         model_spec_id: str,
         objective_id: str,
-        feature_set_id: str,
+        feature_set_id: str | None,
         provenance: TrainingProvenance,
         codec: ModelArtifactCodec,
         model_id: str | None = None,
