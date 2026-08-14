@@ -21,7 +21,7 @@ TASK-0016 — Public-alpha hardening and release candidate preparation.
 | public_api | yes | Public import surface and plugin loading are release contracts. | compatibility/API tests |
 | persisted_data | yes | Public artifacts gain schema envelopes. | migration/schema persistence tests |
 | configuration | yes | Fresh project scaffolding and CI/pre-commit changed. | configuration/init tests |
-| dependencies | yes | Build-system minimum is setuptools 77 and dev quality tools are explicit. | wheel/sdist dependency/build gates |
+| dependencies | yes | Build backend is Poetry Core 2.x; dev/bootstrap and quality tools are explicit. | wheel/sdist dependency/build gates |
 | security_boundary | yes | Trusted-code extension/artifact boundaries are public release concerns. | security documentation and trust-boundary review |
 | concurrency | no | No concurrency semantics changed. | none |
 | performance_sensitive | no | Release hardening does not alter performance-critical algorithms. | none |

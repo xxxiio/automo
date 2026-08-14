@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=77"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=2.0,<3"]
+build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "automo"
-dynamic = ["version"]
+version = "0.3.0a1"
 description = "Automated model optimisation and lifecycle research"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -25,15 +25,14 @@ dependencies = ["PyYAML>=6.0", "typer>=0.16,<1"]
 
 [project.optional-dependencies]
 getdone = ["getdone-dev>=1.1.2,<2"]
-dev = ["pytest>=8", "ruff>=0.16,<0.17", "pre-commit>=4.6,<5"]
+dev = ["pytest>=8", "ruff>=0.16,<0.17", "pre-commit>=4.6,<5", "build>=1.2,<2", "poetry-core>=2.0,<3"]
 docs = ["zensical"]
 
 [project.scripts]
 automo = "automo.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["automo*"]
+[tool.poetry]
+packages = [{ include = "automo", from = "src" }]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
@@ -52,9 +51,3 @@ quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 docstring-code-format = true
-
-[tool.setuptools.dynamic]
-version = {attr = "automo._version.__version__"}
-
-[tool.setuptools.package-data]
-automo = ["skill/**/*.md"]

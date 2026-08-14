@@ -12,6 +12,8 @@ Automo will borrow the comprehensive project shape of Python Project Wizard (PPW
 - Central project configuration: `pyproject.toml`.
 - Source layout: `src/automo/`.
 - Tests: `tests/`.
+- Poetry Core (`poetry.core.masonry.api`) is the PEP 517 build backend, following PPW packaging intent.
+- Standard `[project]` metadata remains authoritative so uv can manage development/test environments without duplicating package metadata.
 - Standards-based wheel and source distribution builds.
 - Clean-install CLI smoke tests are part of the health gate.
 
@@ -25,15 +27,16 @@ Automo will borrow the comprehensive project shape of Python Project Wizard (PPW
 - Coverage may be added through pytest-compatible coverage tooling when useful.
 - Type checking is a separate concern; select a checker only when the runtime contracts justify it rather than duplicating lint responsibilities.
 
-Normal developer setup and quality commands use the activated project environment:
+Normal developer setup mirrors PPW's automatic post-generation bootstrap:
 
 ```bash
-uv sync --extra dev
+python scripts/init_dev.py
 source .venv/bin/activate
-pre-commit install
 pre-commit run --all-files
 pytest -q
 ```
+
+`scripts/init_dev.py` runs `uv sync --extra dev` and then installs/pre-provisions the clone-local pre-commit Git hook. Normal `pip install automo` never mutates Git hooks.
 
 Agent/sandbox execution may use `uv run --extra dev pre-commit run --all-files` when shell activation is not persistent. Direct Ruff commands are troubleshooting tools, not a second canonical quality gate.
 

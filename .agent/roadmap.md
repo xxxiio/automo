@@ -530,8 +530,8 @@ None
 - [x] EC-007: Fresh `automo init` projects validate and pass doctor.
 - [x] EC-008: Seven synthetic onboarding examples run.
 - [x] EC-009: Common CLI missing-ID failures are controlled and traceback-free.
-- [x] EC-010: Wheel clean-install smoke passes.
-- [x] EC-011: Sdist clean-install smoke passes.
+- [ ] EC-010: Wheel clean-install smoke passes.
+- [ ] EC-011: Sdist clean-install smoke passes.
 - [ ] EC-012: Python 3.11–3.13 connected CI passes.
 - [ ] EC-013: CI complete pre-commit hooks pass, including repository/configuration hygiene and Ruff lint/format.
 - [x] EC-014: Public release docs and terminology are ready.
@@ -539,8 +539,8 @@ None
 #### Evidence
 
 - EC-001: `pyproject.toml`, wheel/sdist inspections, and no legacy package/CLI tests.
-- EC-002: `MANIFEST.in`, `.gitignore`, `scripts/source_check.py`, and release artifact inspection.
-- EC-003: `src/automo/_version.py` and dynamic setuptools version metadata.
+- EC-002: `.gitignore`, `scripts/source_check.py`, and release artifact inspection.
+- EC-003: `pyproject.toml` project version and Poetry Core build metadata.
 - EC-004: `src/automo/persistence/` plus schema persistence tests.
 - EC-005: `src/automo/__init__.py`, `docs/public-api.md`, and public API tests.
 - EC-006: `SECURITY.md` and `docs/release-contract.md`.

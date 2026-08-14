@@ -70,27 +70,27 @@ The research/runtime architecture is complete enough for external use. Remaining
 - [x] EC-007: A freshly initialized project validates and passes doctor without internal fixtures.
 - [x] EC-008: Six synthetic onboarding examples run, including one compact end-to-end example.
 - [x] EC-009: Common missing-ID CLI errors are controlled and traceback-free.
-- [x] EC-010: Clean wheel installation and smoke workflow pass.
-- [x] EC-011: Clean sdist installation and smoke workflow pass.
+- [ ] EC-010: Clean wheel installation and smoke workflow pass.
+- [ ] EC-011: Clean sdist installation and smoke workflow pass.
 - [ ] EC-012: Python 3.11, 3.12, and 3.13 CI passes for the release candidate.
 - [ ] EC-013: CI executes the complete repository pre-commit hook set, including repository/configuration hygiene and Ruff lint/format, successfully.
 - [x] EC-014: Public release documentation and terminology are release-ready.
 
 ## Evidence
 
-- EC-001/002: `pyproject.toml`, `MANIFEST.in`, `scripts/source_check.py`, release health gate.
-- EC-003: `src/automo/_version.py` plus dynamic setuptools metadata.
+- EC-001/002: `pyproject.toml`, `scripts/source_check.py`, release health gate.
+- EC-003: `pyproject.toml` project version plus Poetry Core build metadata.
 - EC-004: `src/automo/persistence/`, registry/research/refresh stores, legacy evidence artifact types, tests.
 - EC-005: `src/automo/__init__.py`, `docs/public-api.md`, `tests/test_public_release.py`.
 - EC-006: `SECURITY.md` and release contract.
 - EC-007/008/009: public release tests and examples.
-- EC-010/011: `python scripts/health_gate.py --keep-dist`.
+- EC-010/011: re-validation pending after Poetry Core backend migration in TASK-0020.
 - EC-012/013: `.github/workflows/ci.yml` and `.pre-commit-config.yaml`; execution evidence not available in this offline environment.
 - EC-014: README, CHANGELOG, ROADMAP, docs index/getting-started/user guide/release contract.
 
 ## Remaining work
 
-- EC-012 and EC-013 require one connected CI run across the configured Python matrix.
+- EC-010 through EC-013 require one connected CI run: Poetry Core package/smoke, Python 3.11-3.13, and the complete pre-commit gate.
 
 ## Next milestone
 

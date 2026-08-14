@@ -17,7 +17,7 @@ Prepare and verify the Automo `0.3.0a1` public-alpha release candidate, leaving 
 
 ## Current behaviour
 
-The release candidate is clean, versioned, documented, and passes local tests/build/install gates; connected CI execution remains unevidenced locally.
+The release candidate is clean, versioned, documented, and passes local source/tests after TASK-0020; Poetry Core wheel/sdist build-install evidence must be refreshed in connected CI because Poetry Core cannot be provisioned in this sandbox.
 
 ## Desired behaviour
 
@@ -41,10 +41,10 @@ All fourteen public-alpha exit criteria have reproducible evidence before public
 
 ## Acceptance criteria
 
-- [x] AC-001: Local source/tests/examples/wheel/sdist gates pass.
+- [ ] AC-001: Current Poetry Core release candidate passes source/tests/examples/wheel/sdist gates.
 - [x] AC-002: Public persistence/API/security/onboarding contracts are explicit.
 - [x] AC-003: CI configuration runs the complete pre-commit configuration once as the canonical quality gate and tests Python 3.11–3.13 separately; developer Git hooks use the same configuration.
-- [ ] AC-004: Connected CI confirms the Python 3.11–3.13 test matrix and the canonical complete pre-commit quality job pass.
+- [ ] AC-004: Connected CI confirms Poetry Core package/smoke, Python 3.11–3.13, and the canonical complete pre-commit quality job pass.
 
 ## Validation
 

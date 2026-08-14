@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from typer.testing import CliRunner
+
 import automo
 from automo.cli import app
 from automo.refresh import ModelPoolSnapshot
@@ -18,8 +20,6 @@ from automo.research import (
     ResearchSearchSpace,
 )
 from automo.research.store import FilesystemResearchStore
-from typer.testing import CliRunner
-
 
 RUNNER = CliRunner()
 
@@ -171,7 +171,7 @@ def test_ci_owns_quality_tests_health_docs_and_pages_without_tag_duplication() -
     assert "branches: [main]" in workflow
     assert "tags:" not in workflow
     assert workflow.count("pre-commit run --all-files") == 1
-    assert 'name: pre-commit' in workflow
+    assert "name: pre-commit" in workflow
     assert 'python-version: "3.11"' in workflow
     assert "actions/setup-python@v6" in workflow
     assert 'python -m pip install "pre-commit==4.6.0"' in workflow
@@ -219,10 +219,33 @@ def test_precommit_combines_repository_hygiene_with_ruff_without_legacy_overlap(
 def test_developer_and_agent_precommit_workflows_are_distinct() -> None:
     contributing = Path("CONTRIBUTING.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
-    assert "pre-commit install" in contributing
+    assert "python scripts/init_dev.py" in contributing
     assert "pre-commit run --all-files" in contributing
     assert "uv run pre-commit install" not in contributing
     assert "uv run pre-commit run --all-files" not in contributing
     assert "uv run --extra dev pre-commit run --all-files" in contributing
-    assert "pre-commit install" in readme
+    assert "python scripts/init_dev.py" in readme
     assert "uv run pre-commit install" not in readme
+
+
+def test_poetry_core_is_the_only_build_backend_and_pyproject_owns_version() -> None:
+    import tomllib
+
+    raw = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    assert raw["build-system"]["build-backend"] == "poetry.core.masonry.api"
+    assert raw["build-system"]["requires"] == ["poetry-core>=2.0,<3"]
+    assert raw["project"]["version"] == automo.__version__
+    text = Path("pyproject.toml").read_text(encoding="utf-8").lower()
+    assert "tool.setuptools" not in text
+    assert "setuptools.build_meta" not in text
+
+
+def test_developer_bootstrap_is_ppw_style_and_installs_git_hook() -> None:
+    script = Path("scripts/init_dev.py").read_text(encoding="utf-8")
+    contributing = Path("CONTRIBUTING.md").read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+    assert '"sync", "--extra", "dev"' in script
+    assert '"install", "--install-hooks"' in script
+    assert "python scripts/init_dev.py" in contributing
+    assert "python scripts/init_dev.py" in readme
+    assert "pre-commit install --install-hooks" in contributing

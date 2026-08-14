@@ -4,13 +4,14 @@ Automo targets Python 3.11 and newer and keeps its development workflow delibera
 
 ## Development setup
 
-Install the development environment, activate it in your shell, and install the Git hook once per clone:
+Bootstrap the development environment and Git hook once per clone:
 
 ```bash
-uv sync --extra dev
+python scripts/init_dev.py
 source .venv/bin/activate
-pre-commit install
 ```
+
+The bootstrap explicitly runs `uv sync --extra dev` followed by the clone-local `pre-commit install --install-hooks`. This mirrors PPW's post-generation developer setup without making normal package installation mutate Git state.
 
 On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1` instead.
 

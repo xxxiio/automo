@@ -7,18 +7,18 @@ record_schema_version: 1
 id: NEXT-0020
 status: proposed
 milestone_id: MILESTONE-0013
-advances_exit_criteria: [EC-012, EC-013]
+advances_exit_criteria: [EC-010, EC-011, EC-012, EC-013]
 ---
 
 # Next Deterministic Step
 
 ## Objective
 
-Run the configured connected CI matrix and complete pre-commit quality gate for the corrected `0.3.0a1` release candidate and record the result before publication.
+Run connected CI for the corrected Poetry Core `0.3.0a1` candidate, including package/smoke, Python 3.11-3.13, and the complete pre-commit quality gate, then record the result before publication.
 
 ## Why this is next
 
-All locally executable public-alpha gates are passing; no higher-priority unfinished release work remains before CI quality evidence.
+TASK-0020 completed the Poetry packaging/bootstrap correction, but that backend change invalidated prior wheel/sdist evidence. No higher-priority feature work remains; connected package and quality evidence is now the next release gate.
 
 ## Preconditions
 
@@ -34,10 +34,11 @@ All locally executable public-alpha gates are passing; no higher-priority unfini
 
 ## Ordered actions
 
-1. Execute CI on Python 3.11, 3.12, and 3.13.
-2. Confirm the single canonical `pre-commit run --all-files --show-diff-on-failure` job passes the full PPW-derived hygiene + Ruff hook set.
-3. Record CI evidence for EC-012 and EC-013.
-4. Only after both pass, mark MILESTONE-0013 complete and publish the prepared artifacts.
+1. Build the Poetry Core wheel and sdist in the CI health job and confirm both clean-install smoke paths pass.
+2. Execute tests on Python 3.11, 3.12, and 3.13.
+3. Confirm the single canonical `pre-commit run --all-files --show-diff-on-failure` job passes the full PPW-derived hygiene + Ruff hook set.
+4. Record CI evidence for EC-010 through EC-013.
+5. Only after all four pass, mark MILESTONE-0013 complete and publish the prepared artifacts.
 
 ## Expected outputs
 
@@ -45,8 +46,9 @@ All locally executable public-alpha gates are passing; no higher-priority unfini
 
 ## Acceptance criteria
 
-- [ ] NS-001: Python 3.11–3.13 jobs pass.
-- [ ] NS-002: Complete pre-commit hook execution passes.
+- [ ] NS-001: Poetry Core wheel and sdist clean-install smoke passes.
+- [ ] NS-002: Python 3.11–3.13 jobs pass.
+- [ ] NS-003: Complete pre-commit hook execution passes.
 
 ## Validation
 

@@ -26,16 +26,14 @@ python -m pip install .
 
 ## Development build
 
-```bash
-uv sync --extra dev
-```
-
-For normal developer clones, activate the synced environment and install the Git hook once:
+For a normal developer clone, run the PPW-style one-command bootstrap, then activate the synced environment:
 
 ```bash
+python scripts/init_dev.py
 source .venv/bin/activate
-pre-commit install
 ```
+
+The bootstrap runs `uv sync --extra dev` and `pre-commit install --install-hooks` using the clone-local `.venv`.
 
 Ordinary `git commit` then runs `.pre-commit-config.yaml` automatically. The explicit full local source-quality gate is:
 

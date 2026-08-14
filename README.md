@@ -12,17 +12,16 @@ GetDone integration is optional. Automo runs standalone.
 python -m pip install automo
 ```
 
-For local development:
+For first-time local development, use the PPW-style repository bootstrap:
 
 ```bash
-uv sync --extra dev
+python scripts/init_dev.py
 source .venv/bin/activate
-pre-commit install
 pre-commit run --all-files
 pytest -q
 ```
 
-On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`. The `uv run --extra dev ...` form is reserved for agent/sandbox execution where an activated developer shell is not assumed.
+The bootstrap runs `uv sync --extra dev` and installs/pre-provisions the Git pre-commit hook for the clone. On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`. The `uv run --extra dev ...` form is reserved for agent/sandbox execution where an activated developer shell is not assumed.
 
 ## Start a project
 
