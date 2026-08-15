@@ -4,26 +4,32 @@ Automo targets Python 3.11 and newer and keeps its development workflow delibera
 
 ## Development setup
 
-Install Poetry, then bootstrap the development environment and Git hook once per clone:
+Bootstrap the development tools, Poetry environment, and Git hook once per clone:
 
 ```bash
 python scripts/init_dev.py
 ```
 
-The bootstrap explicitly runs `poetry install --with dev` followed by `poetry run pre-commit install --install-hooks`. This mirrors PPW's post-generation developer setup without making normal package installation mutate Git state.
+Following PPW, the bootstrap uses the current Python to install `pre-commit`, runs standard `pre-commit install`, installs Poetry, and runs `poetry install --with dev`. Poetry owns the project environment; do not manually create or activate a repository `.venv` as a prerequisite. Pre-commit writes the executable clone-local hook to `.git/hooks/pre-commit`.
 
-After installation, ordinary `git commit` commands run the configured pre-commit hooks automatically.
+After bootstrap, ordinary `git commit` uses the standard PPW/pre-commit staged-file hook and always runs the pytest unit-test hook. Before pushing or releasing, run the canonical full-repository gate: `poetry run pre-commit run --all-files --show-diff-on-failure`. GitHub runs that same full-repository command.
 
 ## Canonical quality gate
 
-`.pre-commit-config.yaml` is the single source of truth for fast repository-quality checks. It includes repository/configuration hygiene plus Ruff linting and formatting. Ruff replaces overlapping Black, isort, pyupgrade, and Flake8-family responsibilities; it does not replace the non-Ruff hooks.
+`.pre-commit-config.yaml` is the single source of truth for the repository quality gate. It includes repository/configuration hygiene, Ruff linting/formatting, and unit tests. Ruff replaces overlapping Black, isort, pyupgrade, and Flake8-family responsibilities; it does not replace the non-Ruff hooks.
 
-Run the complete local hook set explicitly before opening a pull request:
+Unit tests are a pre-commit hook implemented through `poetry run pytest -q`. Cross-version compatibility is verified by the GitHub Python 3.11/3.12/3.13 matrix.
+
+Run the exact full-repository gate used by GitHub Actions with:
 
 ```bash
-poetry run pre-commit run --all-files
-poetry run pytest -q
-poetry run python scripts/health_gate.py
+poetry run pre-commit run --all-files --show-diff-on-failure
+```
+
+Packaging/smoke validation remains a separate release concern:
+
+```bash
+poetry run python scripts/health_gate.py --skip-tests
 ```
 
 Direct Ruff commands are useful only for troubleshooting individual lint/format issues. Do not maintain a separate canonical Ruff gate outside pre-commit.

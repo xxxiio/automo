@@ -532,8 +532,8 @@ None
 - [x] EC-009: Common CLI missing-ID failures are controlled and traceback-free.
 - [ ] EC-010: Wheel clean-install smoke passes.
 - [ ] EC-011: Sdist clean-install smoke passes.
-- [ ] EC-012: Python 3.11–3.13 connected CI passes.
-- [ ] EC-013: CI complete pre-commit hooks pass, including repository/configuration hygiene and Ruff lint/format.
+- [ ] EC-012: Tox-managed Python 3.11–3.13 unit-test environments pass inside the canonical connected pre-commit gate.
+- [ ] EC-013: The identical full-repository pre-commit gate passes locally and in CI, including hygiene, Ruff lint/format, and pytest tests.
 - [x] EC-014: Public release docs and terminology are ready.
 
 #### Evidence
@@ -549,8 +549,8 @@ None
 - EC-009: common missing-ID controlled CLI error test.
 - EC-010: wheel clean-install branch of `scripts/health_gate.py`.
 - EC-011: sdist clean-install branch of `scripts/health_gate.py`.
-- EC-012: `.github/workflows/ci.yml`; connected execution evidence pending.
-- EC-013: `.pre-commit-config.yaml` and CI invocation; connected execution evidence pending.
+- EC-012: `.pre-commit-config.yaml` and `.github/workflows/ci.yml`; connected Python 3.11/3.12/3.13 pytest evidence pending.
+- EC-013: executable `.git/hooks/pre-commit` installed by pre-commit, `.pre-commit-config.yaml`, and the identical CI invocation; connected execution evidence pending.
 - EC-014: README, CHANGELOG, ROADMAP, security, getting-started, public API, and release-contract docs.
 
 #### Next milestone

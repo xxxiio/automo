@@ -11,7 +11,7 @@ status: current
 
 ## Current state
 
-MILESTONE-0013 is active. The `0.3.0a1` public-alpha candidate now includes completed MILESTONE-0014 through MILESTONE-0016 research governance, guidance completeness, project-agent composition, and consumer-compatibility hardening; TASK-0020 restored Poetry Core packaging and PPW-style developer bootstrap; connected package/CI evidence remains the release gate.
+MILESTONE-0013 is active. The `0.3.0a1` public-alpha candidate includes completed MILESTONE-0014 through MILESTONE-0016 research governance, guidance completeness, project-agent composition, and consumer-compatibility hardening. The current release-hardening task removes tox: local pre-commit runs pytest through Poetry and connected CI owns the Python 3.11–3.13 compatibility matrix.
 
 ## Current milestone
 
@@ -19,7 +19,9 @@ MILESTONE-0013 — Public alpha hardening.
 
 ## Recently completed
 
-- Completed TASK-0020: restored Poetry Core packaging, pyproject-owned versioning, and PPW-style developer bootstrap with automatic Git hook installation.
+- Completed TASK-0022: unified local/CI full-repository pre-commit execution and moved Python 3.11–3.13 unit tests into the gate through tox.
+- Completed TASK-0021: removed uv from canonical developer/GitHub workflows and restored Poetry-only development/CI.
+- Completed TASK-0020: restored Poetry Core packaging, pyproject-owned versioning, and PPW-style developer bootstrap.
 
 - Completed MILESTONE-0016: GetDone-style `.project-agent/` research extensions, composition locks, generalized provenance/pools/selectors, state-schema checks, agent-plan conformance, and xihbm compatibility evidence.
 
@@ -34,7 +36,7 @@ MILESTONE-0013 — Public alpha hardening.
 
 ## In progress
 
-- Refreshing wheel/sdist clean-install evidence for the Poetry Core candidate, plus connected Python 3.11–3.13 CI and complete pre-commit execution evidence.
+- Refreshing wheel/sdist clean-install evidence for the Poetry Core candidate, plus connected evidence that the canonical full-repository pre-commit gate (including pytest plus Python 3.11–3.13 CI tests) passes.
 
 ## Blocked
 
@@ -42,13 +44,13 @@ MILESTONE-0013 — Public alpha hardening.
 
 ## Key decisions
 
-- Pre-commit is the canonical repository-quality gate; it retains PPW-style repository/configuration hygiene while Ruff replaces overlapping Black/isort/Flake8-family checks. Developer Git hooks and CI consume the same configuration.
+- Pre-commit is the canonical local repository-quality gate and includes pytest through Poetry. GitHub runs the full pre-commit gate plus a separate Python 3.11/3.12/3.13 pytest compatibility matrix.
 - Public examples remain synthetic and domain-neutral.
 - Agent research governance, guidance completeness, project-specific extension composition, and consumer compatibility are explicit public-alpha blockers and are now locally satisfied through MILESTONE-0016.
 
 ## Project health
 
-- 123 tests pass locally.
+- Local pytest passes on the available interpreter; connected pytest execution across Python 3.11, 3.12, and 3.13 remains pending.
 - Previous setuptools wheel/sdist evidence is intentionally stale after TASK-0020; current Poetry Core package build awaits connected dependency provisioning.
 - GetDone 1.1.2 validates 27 managed files with 0 errors and 10 expected project-owned warnings.
 
@@ -62,4 +64,4 @@ MILESTONE-0013 — Public alpha hardening.
 
 ## Next deterministic step
 
-NEXT-0020 — run connected Poetry Core package/smoke, Python 3.11–3.13 CI, and the complete pre-commit gate, then record the result before publication.
+NEXT-0022 — run the connected canonical full-repository pre-commit gate and Poetry Core package/smoke checks, then record EC-010 through EC-013 evidence before publication.

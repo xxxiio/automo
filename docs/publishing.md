@@ -4,7 +4,7 @@ Automo uses GitHub Actions for continuous integration, PyPI publishing, and docu
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests. It runs the complete repository pre-commit hook set once on Python 3.11, runs the test suite across Python 3.11, 3.12, and 3.13, runs packaging/smoke checks once, and builds the documentation strictly once. Successful `main` CI also deploys that exact documentation build to GitHub Pages.
+`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests. Its quality job runs the canonical full-repository pre-commit gate, while a separate Python 3.11/3.12/3.13 matrix runs `poetry run pytest -q` under each supported interpreter. Packaging/smoke checks and strict documentation builds remain separate jobs. Successful `main` CI also deploys that exact documentation build to GitHub Pages.
 
 ## PyPI releases
 
@@ -57,4 +57,4 @@ The configured project URL is:
 
 ## Release safety model
 
-PyPI publication uses a dedicated tag-only workflow and only the publishing job receives `id-token: write`. The `pypi` GitHub environment is the intended location for deployment protection. GitHub Pages deployment happens only after the shared CI quality, test, package-health, and docs jobs pass; only the deployment job receives `pages: write` plus `id-token: write`.
+PyPI publication uses a dedicated tag-only workflow and only the publishing job receives `id-token: write`. The `pypi` GitHub environment is the intended location for deployment protection. GitHub Pages deployment happens only after the shared CI quality, package-health, and docs jobs pass; only the deployment job receives `pages: write` plus `id-token: write`.

@@ -43,7 +43,7 @@ All fourteen public-alpha exit criteria have reproducible evidence before public
 
 - [ ] AC-001: Current Poetry Core release candidate passes source/tests/examples/wheel/sdist gates.
 - [x] AC-002: Public persistence/API/security/onboarding contracts are explicit.
-- [x] AC-003: CI configuration runs the complete pre-commit configuration once as the canonical quality gate and tests Python 3.11–3.13 separately; developer Git hooks use the same configuration.
+- [x] AC-003: Local pre-commit runs repository hygiene, Ruff, and pytest through Poetry; connected CI separately runs the same pytest suite on Python 3.11, 3.12, and 3.13.
 - [ ] AC-004: Connected CI confirms Poetry Core package/smoke, Python 3.11–3.13, and the canonical complete pre-commit quality job pass.
 
 ## Validation

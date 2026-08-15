@@ -52,6 +52,10 @@ exclude = [".agent", ".venv", "build", "dist", "site"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["automo.cli._root_option"]
 
 [tool.ruff.format]
 quote-style = "double"

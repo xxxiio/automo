@@ -12,15 +12,14 @@ GetDone integration is optional. Automo runs standalone.
 python -m pip install automo
 ```
 
-For first-time local development, install Poetry and use the PPW-style repository bootstrap:
+For first-time local development, use the PPW-style repository bootstrap:
 
 ```bash
 python scripts/init_dev.py
-poetry run pre-commit run --all-files
-poetry run pytest -q
+poetry run pre-commit run --all-files --show-diff-on-failure
 ```
 
-The bootstrap runs `poetry install --with dev` and installs/pre-provisions the Git pre-commit hook for the clone. Ordinary `git commit` then runs the configured hooks automatically.
+The bootstrap uses the current Python (Conda, venv, or plain Python) to install `pre-commit` and Poetry, runs standard `pre-commit install`, and then lets Poetry create/manage the project environment. Ordinary `git commit` runs the standard staged-file pre-commit checks plus the always-run pytest unit-test hook. The explicit local full-repository gate is `poetry run pre-commit run --all-files --show-diff-on-failure`, which matches the GitHub quality job; GitHub separately runs pytest on Python 3.11, 3.12, and 3.13.
 
 ## Start a project
 
@@ -73,7 +72,7 @@ Automo does not sandbox project plugins, trainers, evaluators, codecs, calibrato
 
 ## Development workflow
 
-This repository uses pre-commit as the canonical source-quality gate. Repository/configuration hygiene and Ruff formatting/linting are configured as hooks, and CI runs that same configuration directly. GetDone project records under `.agent/` are development metadata for this repository and are not required at runtime.
+This repository uses pre-commit as the local repository-quality gate. Repository/configuration hygiene, Ruff formatting/linting, and `poetry run pytest -q` are hooks in that gate. GitHub separately runs the same pytest command on Python 3.11, 3.12, and 3.13. GetDone project records under `.agent/` are development metadata for this repository and are not required at runtime.
 
 
 ## Project-specific research guidance

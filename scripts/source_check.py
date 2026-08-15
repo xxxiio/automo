@@ -1,28 +1,38 @@
 from __future__ import annotations
 
 import ast
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-CHECK_DIRS = (ROOT / 'src', ROOT / 'tests', ROOT / 'scripts')
+CHECK_DIRS = (ROOT / "src", ROOT / "tests", ROOT / "scripts")
+REQUIRED_RELEASE_PATHS = (
+    Path(".gitignore"),
+    Path(".pre-commit-config.yaml"),
+    Path(".github/workflows/ci.yml"),
+    Path(".github/workflows/publish-pypi.yml"),
+    Path("pyproject.toml"),
+)
 
 
 def main() -> int:
     errors: list[str] = []
+    for relative_path in REQUIRED_RELEASE_PATHS:
+        if not (ROOT / relative_path).is_file():
+            errors.append(f"release source is missing required path: {relative_path.as_posix()}")
     for base in CHECK_DIRS:
-        for path in sorted(base.rglob('*.py')):
-            text = path.read_text(encoding='utf-8')
+        for path in sorted(base.rglob("*.py")):
+            text = path.read_text(encoding="utf-8")
             try:
                 ast.parse(text, filename=str(path))
             except SyntaxError as exc:
-                errors.append(f'{path.relative_to(ROOT)}:{exc.lineno}: {exc.msg}')
+                errors.append(f"{path.relative_to(ROOT)}:{exc.lineno}: {exc.msg}")
             for lineno, line in enumerate(text.splitlines(), start=1):
                 if line.rstrip() != line:
-                    errors.append(f'{path.relative_to(ROOT)}:{lineno}: trailing whitespace')
-                if '\t' in line:
-                    errors.append(f'{path.relative_to(ROOT)}:{lineno}: tab character')
+                    errors.append(f"{path.relative_to(ROOT)}:{lineno}: trailing whitespace")
+                if "\t" in line:
+                    errors.append(f"{path.relative_to(ROOT)}:{lineno}: tab character")
 
     forbidden_prefixes = (
         "src/getdone_mr/",
@@ -46,9 +56,15 @@ def main() -> int:
 
     if tracked is not None:
         for rel in tracked:
-            if any(rel == prefix.rstrip("/") or rel.startswith(prefix) for prefix in forbidden_prefixes):
+            if any(
+                rel == prefix.rstrip("/") or rel.startswith(prefix) for prefix in forbidden_prefixes
+            ):
                 errors.append(f"release source tracks generated/legacy path: {rel}")
-            if any(part.endswith(suffix.rstrip("/")) for part in Path(rel).parts for suffix in forbidden_suffixes):
+            if any(
+                part.endswith(suffix.rstrip("/"))
+                for part in Path(rel).parts
+                for suffix in forbidden_suffixes
+            ):
                 errors.append(f"release source tracks generated packaging metadata: {rel}")
     else:
         # Source archives do not contain .git metadata. In that case validate the
@@ -56,13 +72,15 @@ def main() -> int:
         for prefix in forbidden_prefixes:
             path = ROOT / prefix.rstrip("/")
             if path.exists():
-                errors.append(f"release source tree contains generated/legacy path: {path.relative_to(ROOT)}")
+                errors.append(
+                    f"release source tree contains generated/legacy path: {path.relative_to(ROOT)}"
+                )
     if errors:
-        print('\n'.join(errors), file=sys.stderr)
+        print("\n".join(errors), file=sys.stderr)
         return 1
-    print('source-check: passed')
+    print("source-check: passed")
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

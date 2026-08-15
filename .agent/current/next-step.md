@@ -4,7 +4,7 @@ template_version: 3.0.0
 project_owned: true
 record_contract: next-step
 record_schema_version: 1
-id: NEXT-0020
+id: NEXT-0030
 status: proposed
 milestone_id: MILESTONE-0013
 advances_exit_criteria: [EC-010, EC-011, EC-012, EC-013]
@@ -14,57 +14,48 @@ advances_exit_criteria: [EC-010, EC-011, EC-012, EC-013]
 
 ## Objective
 
-Run connected CI for the corrected Poetry Core `0.3.0a1` candidate, including package/smoke, Python 3.11-3.13, and the complete pre-commit quality gate, then record the result before publication.
+Run connected CI for the tox-free Poetry/pre-commit/pytest `0.3.0a1` candidate and record package plus compatibility evidence before publication.
 
 ## Why this is next
 
-TASK-0020 completed the Poetry packaging/bootstrap correction, but that backend change invalidated prior wheel/sdist evidence. No higher-priority feature work remains; connected package and quality evidence is now the next release gate.
+TASK-0030 removes tox and the local multi-interpreter burden. No higher-priority feature work remains; connected release evidence is the next blocker.
 
 ## Preconditions
 
-- Local tests/examples/wheel/sdist release gates pass.
-- `.github/workflows/ci.yml` and `.pre-commit-config.yaml` are committed.
-
-## Inputs
-
-- `.github/workflows/ci.yml`
-- `.pre-commit-config.yaml`
-- `pyproject.toml`
-- current `0.3.0a1` source tree
+- `python scripts/init_dev.py` completes.
+- Standard `.git/hooks/pre-commit` exists and is executable.
+- Local `poetry run pre-commit run --all-files --show-diff-on-failure` passes.
 
 ## Ordered actions
 
-1. Build the Poetry Core wheel and sdist in the CI health job and confirm both clean-install smoke paths pass.
-2. Execute tests on Python 3.11, 3.12, and 3.13.
-3. Confirm the single canonical `pre-commit run --all-files --show-diff-on-failure` job passes the full PPW-derived hygiene + Ruff hook set.
-4. Record CI evidence for EC-010 through EC-013.
-5. Only after all four pass, mark MILESTONE-0013 complete and publish the prepared artifacts.
-
-## Expected outputs
-
-- Passing CI evidence or actionable failures.
+1. Run the connected GitHub quality job and confirm full-repository pre-commit passes.
+2. Run `poetry run pytest -q` on Python 3.11, 3.12, and 3.13 through the CI matrix.
+3. Build the Poetry Core wheel and sdist and confirm both clean-install smoke paths pass.
+4. Record EC-010 through EC-013 evidence.
+5. Close MILESTONE-0013 only after all release gates pass.
 
 ## Acceptance criteria
 
-- [ ] NS-001: Poetry Core wheel and sdist clean-install smoke passes.
-- [ ] NS-002: Python 3.11–3.13 jobs pass.
-- [ ] NS-003: Complete pre-commit hook execution passes.
+- [ ] NS-001: Poetry Core wheel clean-install smoke passes.
+- [ ] NS-002: Poetry Core sdist clean-install smoke passes.
+- [ ] NS-003: pytest passes on Python 3.11, 3.12, and 3.13 in connected CI.
+- [ ] NS-004: full-repository pre-commit passes locally and in GitHub.
 
 ## Validation
 
 ```bash
-# Executed by connected CI:
-python -m pip install "poetry>=2.1,<3"
-poetry install --with dev
-python -m pip install "pre-commit==4.6.0"
-pre-commit run --all-files --show-diff-on-failure
+python scripts/init_dev.py
+poetry run pre-commit run --all-files --show-diff-on-failure
 poetry run pytest -q
+poetry run python scripts/health_gate.py --skip-tests
 ```
 
 ## Stop conditions
 
-- Stop publication if any CI/pre-commit job fails.
+- Stop publication if any pre-commit/pytest/package gate fails.
 
 ## Out of scope
 
+- Tox or tox plugins.
+- Conda-specific repository configuration.
 - New feature development.

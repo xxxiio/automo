@@ -32,12 +32,12 @@ For a normal developer clone, run the PPW-style one-command bootstrap:
 python scripts/init_dev.py
 ```
 
-The bootstrap runs `poetry install --with dev` and `poetry run pre-commit install --install-hooks`.
+Matching PPW, the bootstrap installs `pre-commit` with the current Python, runs `pre-commit install`, installs Poetry, and then runs `poetry install --with dev`. Poetry owns the project environment; pre-commit creates `.git/hooks/pre-commit`.
 
-Ordinary `git commit` then runs `.pre-commit-config.yaml` automatically. The explicit full local source-quality gate is:
+Ordinary `git commit` and GitHub Actions both run the same full-repository gate. The explicit command is:
 
 ```bash
-poetry run pre-commit run --all-files
+poetry run pre-commit run --all-files --show-diff-on-failure
 ```
 
 Documentation tooling is intentionally separate from the core development gate:
@@ -67,7 +67,7 @@ Linting is owned by the Ruff lint hook inside pre-commit, while non-Ruff hooks c
 pre-commit run ruff-check --all-files
 ```
 
-The complete canonical source-quality result comes only from `pre-commit run --all-files`. In dependency-constrained offline environments where hook environments are unavailable, the repository-owned deterministic source-hygiene fallback is:
+The complete canonical source-quality result comes only from `pre-commit run --all-files --show-diff-on-failure`. In dependency-constrained offline environments where hook environments are unavailable, the repository-owned deterministic source-hygiene fallback is:
 
 ```bash
 python scripts/source_check.py
@@ -83,20 +83,18 @@ A dedicated third-party type checker is not configured for the 0.1 release bound
 
 ## Unit tests
 
+Unit tests are part of the canonical local pre-commit gate through pytest:
+
 ```bash
 poetry run pytest -q
 ```
 
-The dependency-light fallback used by the release health gate is:
+Tox owns Python 3.11, 3.12, and 3.13 environments and runs `pytest -q` in each. `skip_missing_interpreters = false`, so missing supported interpreters fail the gate instead of being silently skipped. Focused pytest commands may still be used for troubleshooting, but they are not completion evidence.
+
+Focused troubleshooting example:
 
 ```bash
-python -m pytest -q
-```
-
-Focused example:
-
-```bash
-python -m pytest -q tests/test_execution.py
+poetry run pytest -q tests/test_execution.py
 ```
 
 ## Integration and end-to-end tests

@@ -20,7 +20,7 @@ TASK-0016 — Prepare and verify the Automo 0.3.0a1 public-alpha release candida
 |---|---|---|
 | AC-001 | not-run | 127-test suite/source checks pass, but Poetry Core wheel/sdist evidence is stale until the current backend is built in connected CI |
 | AC-002 | pass | persistence/API/security/onboarding files and tests |
-| AC-003 | pass | `.github/workflows/ci.yml` executes the complete pre-commit configuration once and tests 3.11/3.12/3.13 separately; `scripts/init_dev.py` performs PPW-style Poetry development installation plus clone-local hook installation; current user/developer and GitHub workflows are Poetry-only |
+| AC-003 | pass | `.github/workflows/ci.yml` and local development execute the same complete pre-commit configuration; pre-commit runs pytest on the project Python and CI separately proves Python 3.11–3.13 compatibility; `scripts/init_dev.py` is stdlib-only before bootstrapping pre-commit/Poetry and validates all three interpreters |
 | AC-004 | not-run | connected rerun must prove Poetry Core package/smoke, Python 3.11–3.13, and complete pre-commit on the corrected candidate |
 
 ## Quality gate evidence

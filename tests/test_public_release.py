@@ -176,19 +176,21 @@ def test_ci_owns_quality_tests_health_docs_and_pages_without_tag_duplication() -
     assert "branches: [main]" in workflow
     assert "tags:" not in workflow
     assert workflow.count("pre-commit run --all-files") == 1
-    assert "name: pre-commit" in workflow
-    assert 'python-version: "3.11"' in workflow
+    assert "name: full quality gate" in workflow
+    assert 'python-version: ["3.11", "3.12", "3.13"]' in workflow
+    assert "matrix.python-version" in workflow
     assert "actions/setup-python@v6" in workflow
-    assert 'python -m pip install "pre-commit==4.6.0"' in workflow
     assert "actions/cache@v4" in workflow
     assert "~/.cache/pre-commit" in workflow
     assert "setup-uv" not in workflow
     assert "uv run" not in workflow
     assert "uv sync" not in workflow
-    assert 'python-version: ["3.11", "3.12", "3.13"]' in workflow
     assert 'python -m pip install "poetry>=2.1,<3"' in workflow
     assert "poetry install --with dev" in workflow
     assert "poetry run pytest -q" in workflow
+    assert "poetry run pre-commit run --all-files --show-diff-on-failure" in workflow
+    assert "tox-gh-actions" not in workflow
+    assert workflow.count("poetry run pre-commit run --all-files --show-diff-on-failure") == 1
     assert "scripts/health_gate.py --skip-tests" in workflow
     assert "zensical build --clean --strict" in workflow
     assert "actions/configure-pages@v5" in workflow
@@ -201,7 +203,12 @@ def test_ci_owns_quality_tests_health_docs_and_pages_without_tag_duplication() -
 
 
 def test_precommit_combines_repository_hygiene_with_ruff_without_legacy_overlap() -> None:
+    import yaml
+
     config = Path(".pre-commit-config.yaml").read_text(encoding="utf-8")
+    parsed = yaml.safe_load(config)
+    assert isinstance(parsed, dict)
+    assert isinstance(parsed.get("repos"), list)
     for hook in (
         "check-added-large-files",
         "check-ast",
@@ -218,9 +225,12 @@ def test_precommit_combines_repository_hygiene_with_ruff_without_legacy_overlap(
         "validate-pyproject",
         "ruff-check",
         "ruff-format",
+        "pytest-tests",
     ):
         assert f"id: {hook}" in config
     assert "--exit-non-zero-on-fix" in config
+    assert 'name: "unit tests"' in config
+    assert "entry: poetry run pytest -q" in config
     for legacy in ("mirrors-isort", "ambv/black", "psf/black", "pycqa/flake8", "pyupgrade"):
         assert legacy not in config.lower()
 
@@ -235,6 +245,9 @@ def test_developer_workflow_is_poetry_only() -> None:
         assert "uv sync" not in text
     assert "poetry run pre-commit run --all-files" in contributing
     assert "poetry run pytest -q" in contributing
+    assert "poetry run tox" not in contributing
+    assert "Python 3.11" in contributing
+    assert "do not manually create or activate" in contributing.lower()
 
 
 def test_poetry_core_is_the_only_build_backend_and_pyproject_owns_version() -> None:
@@ -250,14 +263,37 @@ def test_poetry_core_is_the_only_build_backend_and_pyproject_owns_version() -> N
 
 
 def test_developer_bootstrap_is_ppw_style_and_installs_git_hook() -> None:
-    script = Path("scripts/init_dev.py").read_text(encoding="utf-8")
-    bootstrap = Path("src/automo/dev/bootstrap.py").read_text(encoding="utf-8")
+    bootstrap = Path("scripts/init_dev.py").read_text(encoding="utf-8")
     contributing = Path("CONTRIBUTING.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
-    assert "from automo.dev.bootstrap import bootstrap" in script
-    assert '"install", "--with", "dev"' in bootstrap
-    assert '"run", "pre-commit", "install", "--install-hooks"' in bootstrap
+    assert "from automo" not in bootstrap
+    assert "import yaml" not in bootstrap
+    assert '[sys.executable, "-m", "pip", "install", "pre-commit"]' in bootstrap
+    assert '[sys.executable, "-m", "pre_commit", "install"]' in bootstrap
+    assert '[sys.executable, "-m", "pip", "install", "poetry"]' in bootstrap
+    assert '[sys.executable, "-m", "poetry", "install", "--with", "dev"]' in bootstrap
+    assert "core.hooksPath" not in contributing
+    assert "git config core.hooksPath .githooks" not in bootstrap
+    assert "hooks/pre-commit" in bootstrap
+    assert "os.X_OK" in bootstrap
     assert "uv" not in bootstrap.lower()
     assert "python scripts/init_dev.py" in contributing
     assert "python scripts/init_dev.py" in readme
-    assert "pre-commit install --install-hooks" in contributing
+    assert ".git/hooks/pre-commit" in contributing
+    assert not Path(".githooks").exists()
+
+
+def test_pytest_is_local_precommit_test_gate_and_ci_owns_version_matrix() -> None:
+    assert not Path("tox.ini").exists()
+    pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+    assert "tox = " not in pyproject
+    config = Path(".pre-commit-config.yaml").read_text(encoding="utf-8")
+    assert "id: pytest-tests" in config
+    assert "entry: poetry run pytest -q" in config
+    assert "pass_filenames: false" in config
+    assert "always_run: true" in config
+    workflow = Path(".github/workflows/ci.yml").read_text(encoding="utf-8")
+    assert 'python-version: ["3.11", "3.12", "3.13"]' in workflow
+    assert "python-version: ${{ matrix.python-version }}" in workflow
+    assert "poetry run pytest -q" in workflow
+    assert "tox" not in workflow.lower()

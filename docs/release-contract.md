@@ -26,7 +26,7 @@ Project plugins, trainers, evaluators, codecs, calibrators, injected services, a
 
 ## Release gate
 
-The release candidate must pass the full test suite, source compilation, all runnable examples, wheel and sdist build/install smoke tests, and the repository pre-commit configuration in CI, plus the test suite across all supported Python versions.
+The release candidate must pass the canonical full-repository pre-commit gate locally and in CI. That gate includes repository hygiene, Ruff lint/format, and pytest locally plus GitHub Python 3.11, 3.12, and 3.13 compatibility jobs. Source compilation, runnable examples, and wheel/sdist build/install smoke tests remain separate release gates.
 
 ## Agent research governance
 
