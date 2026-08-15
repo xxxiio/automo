@@ -25,14 +25,21 @@ dependencies = ["PyYAML>=6.0", "typer>=0.16,<1"]
 
 [project.optional-dependencies]
 getdone = ["getdone-dev>=1.1.2,<2"]
-dev = ["pytest>=8", "ruff>=0.16,<0.17", "pre-commit>=4.6,<5", "build>=1.2,<2", "poetry-core>=2.0,<3"]
-docs = ["zensical"]
 
 [project.scripts]
 automo = "automo.cli:main"
 
 [tool.poetry]
 packages = [{ include = "automo", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8"
+ruff = ">=0.16,<0.17"
+pre-commit = ">=4.6,<5"
+build = ">=1.2,<2"
+
+[tool.poetry.group.docs.dependencies]
+zensical = "*"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

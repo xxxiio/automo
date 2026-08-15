@@ -164,6 +164,11 @@ def test_release_workflow_is_tag_only_and_reuses_successful_ci() -> None:
     assert "pre-commit run --all-files" not in workflow
     assert "pytest -q" not in workflow
     assert "does not match package version" in workflow
+    assert "setup-uv" not in workflow
+    assert "uv build" not in workflow
+    assert "uvx" not in workflow
+    assert "poetry build" in workflow
+    assert "python -m twine check dist/*" in workflow
 
 
 def test_ci_owns_quality_tests_health_docs_and_pages_without_tag_duplication() -> None:
@@ -177,9 +182,13 @@ def test_ci_owns_quality_tests_health_docs_and_pages_without_tag_duplication() -
     assert 'python -m pip install "pre-commit==4.6.0"' in workflow
     assert "actions/cache@v4" in workflow
     assert "~/.cache/pre-commit" in workflow
-    assert "uv run --python 3.11 pre-commit" not in workflow
+    assert "setup-uv" not in workflow
+    assert "uv run" not in workflow
+    assert "uv sync" not in workflow
     assert 'python-version: ["3.11", "3.12", "3.13"]' in workflow
-    assert "pytest -q" in workflow
+    assert 'python -m pip install "poetry>=2.1,<3"' in workflow
+    assert "poetry install --with dev" in workflow
+    assert "poetry run pytest -q" in workflow
     assert "scripts/health_gate.py --skip-tests" in workflow
     assert "zensical build --clean --strict" in workflow
     assert "actions/configure-pages@v5" in workflow
@@ -216,16 +225,16 @@ def test_precommit_combines_repository_hygiene_with_ruff_without_legacy_overlap(
         assert legacy not in config.lower()
 
 
-def test_developer_and_agent_precommit_workflows_are_distinct() -> None:
+def test_developer_workflow_is_poetry_only() -> None:
     contributing = Path("CONTRIBUTING.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
-    assert "python scripts/init_dev.py" in contributing
-    assert "pre-commit run --all-files" in contributing
-    assert "uv run pre-commit install" not in contributing
-    assert "uv run pre-commit run --all-files" not in contributing
-    assert "uv run --extra dev pre-commit run --all-files" in contributing
-    assert "python scripts/init_dev.py" in readme
-    assert "uv run pre-commit install" not in readme
+    project_skeleton = Path("docs/PROJECT-SKELETON.md").read_text(encoding="utf-8")
+    for text in (contributing, readme, project_skeleton):
+        assert "python scripts/init_dev.py" in text
+        assert "uv run" not in text
+        assert "uv sync" not in text
+    assert "poetry run pre-commit run --all-files" in contributing
+    assert "poetry run pytest -q" in contributing
 
 
 def test_poetry_core_is_the_only_build_backend_and_pyproject_owns_version() -> None:
@@ -242,10 +251,13 @@ def test_poetry_core_is_the_only_build_backend_and_pyproject_owns_version() -> N
 
 def test_developer_bootstrap_is_ppw_style_and_installs_git_hook() -> None:
     script = Path("scripts/init_dev.py").read_text(encoding="utf-8")
+    bootstrap = Path("src/automo/dev/bootstrap.py").read_text(encoding="utf-8")
     contributing = Path("CONTRIBUTING.md").read_text(encoding="utf-8")
     readme = Path("README.md").read_text(encoding="utf-8")
-    assert '"sync", "--extra", "dev"' in script
-    assert '"install", "--install-hooks"' in script
+    assert "from automo.dev.bootstrap import bootstrap" in script
+    assert '"install", "--with", "dev"' in bootstrap
+    assert '"run", "pre-commit", "install", "--install-hooks"' in bootstrap
+    assert "uv" not in bootstrap.lower()
     assert "python scripts/init_dev.py" in contributing
     assert "python scripts/init_dev.py" in readme
     assert "pre-commit install --install-hooks" in contributing

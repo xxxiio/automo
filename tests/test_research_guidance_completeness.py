@@ -40,11 +40,7 @@ def test_high_risk_tasks_load_required_safety_guidance() -> None:
 
 
 def test_guidance_documents_cover_pre_alpha_research_failure_modes() -> None:
-    selected = {
-        doc.path: doc.content
-        for task in task_classes()
-        for doc in select_guidance(task)
-    }
+    selected = {doc.path: doc.content for task in task_classes() for doc in select_guidance(task)}
     text = "\n".join(selected.values()).lower()
     for phrase in (
         "multiple-testing",
@@ -99,12 +95,18 @@ def test_multi_iteration_guidance_walkthrough_is_bounded_and_complete() -> None:
 
 
 def test_research_guidance_example_runs() -> None:
+    import os
     import subprocess
     import sys
 
+    env = os.environ.copy()
+    existing = env.get("PYTHONPATH")
+    source_path = str(ROOT / "src")
+    env["PYTHONPATH"] = source_path if not existing else f"{source_path}{os.pathsep}{existing}"
     completed = subprocess.run(
         [sys.executable, "examples/research-guidance/example.py"],
         cwd=ROOT,
+        env=env,
         capture_output=True,
         text=True,
     )

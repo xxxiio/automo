@@ -31,7 +31,7 @@ TASK-0016 — Automo 0.3.0a1 public-alpha release candidate.
 ```bash
 python -m pytest -q
 python scripts/health_gate.py --keep-dist  # current Poetry Core build blocked by unavailable build dependency
-uv run --with pre-commit==3.8.0 pre-commit --version  # failed: offline DNS/dependency resolution
+python -m pre_commit --version  # not available in this offline execution environment
 ```
 
 ## Checks not run

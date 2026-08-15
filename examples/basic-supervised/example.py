@@ -1,8 +1,19 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
 from automo.runtime import (
-    CsvDataSource, EvaluationSpec, FeatureSetSpec, FeatureSpec, LambdaFeature, MeanSquaredError,
-    MetricDirection, MetricSpec, ModelSpec, ObjectiveSpec, ResearchPlugin, ResearchRuntime,
+    CsvDataSource,
+    EvaluationSpec,
+    FeatureSetSpec,
+    FeatureSpec,
+    LambdaFeature,
+    MeanSquaredError,
+    MetricDirection,
+    MetricSpec,
+    ModelSpec,
+    ObjectiveSpec,
+    ResearchPlugin,
+    ResearchRuntime,
     SingleFeatureLinearRunner,
 )
 
@@ -12,10 +23,21 @@ with TemporaryDirectory() as tmp:
     objective = ObjectiveSpec("regression", target="y")
     evaluation = EvaluationSpec(MetricSpec("mse", MetricDirection.MINIMIZE))
     plugin = ResearchPlugin(
-        id="basic", data_sources=(CsvDataSource("data", path),),
+        id="basic",
+        data_sources=(CsvDataSource("data", path),),
         feature_computers=(LambdaFeature(FeatureSpec("x"), lambda row, _: float(row["x"])),),
-        feature_sets=(FeatureSetSpec("features", ("x",)),), objectives=(objective,),
-        metrics=(MeanSquaredError(),), model_specs=(ModelSpec("linear", "linear.single_feature", "features", objective, evaluation),),
+        feature_sets=(FeatureSetSpec("features", ("x",)),),
+        objectives=(objective,),
+        metrics=(MeanSquaredError(),),
+        model_specs=(
+            ModelSpec(
+                "linear",
+                "linear.single_feature",
+                "features",
+                objective,
+                evaluation,
+            ),
+        ),
         model_runners=(SingleFeatureLinearRunner(),),
     )
     runtime = ResearchRuntime(plugin)

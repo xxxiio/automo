@@ -12,16 +12,15 @@ GetDone integration is optional. Automo runs standalone.
 python -m pip install automo
 ```
 
-For first-time local development, use the PPW-style repository bootstrap:
+For first-time local development, install Poetry and use the PPW-style repository bootstrap:
 
 ```bash
 python scripts/init_dev.py
-source .venv/bin/activate
-pre-commit run --all-files
-pytest -q
+poetry run pre-commit run --all-files
+poetry run pytest -q
 ```
 
-The bootstrap runs `uv sync --extra dev` and installs/pre-provisions the Git pre-commit hook for the clone. On Windows PowerShell, activate the environment with `.venv\Scripts\Activate.ps1`. The `uv run --extra dev ...` form is reserved for agent/sandbox execution where an activated developer shell is not assumed.
+The bootstrap runs `poetry install --with dev` and installs/pre-provisions the Git pre-commit hook for the clone. Ordinary `git commit` then runs the configured hooks automatically.
 
 ## Start a project
 

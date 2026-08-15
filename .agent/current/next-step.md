@@ -54,10 +54,11 @@ TASK-0020 completed the Poetry packaging/bootstrap correction, but that backend 
 
 ```bash
 # Executed by connected CI:
-uv sync --extra dev --python <3.11|3.12|3.13>
+python -m pip install "poetry>=2.1,<3"
+poetry install --with dev
 python -m pip install "pre-commit==4.6.0"
 pre-commit run --all-files --show-diff-on-failure
-uv run --python <version> pytest -q
+poetry run pytest -q
 ```
 
 ## Stop conditions

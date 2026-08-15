@@ -19,7 +19,6 @@ from automo.runtime import (
 )
 from automo.runtime.builtins import LinearModelJsonCodec
 
-
 with TemporaryDirectory() as tmp:
     root = Path(tmp)
     data_path = root / "data.csv"
@@ -40,8 +39,16 @@ with TemporaryDirectory() as tmp:
     )
 
     runtime = ResearchRuntime(plugin)
-    registry = FilesystemModelRegistry(root / ".automo" / "registry", codecs=(LinearModelJsonCodec(),))
-    manifest = runtime.fit_and_register("linear", data_source_id="training", registry=registry, seed=42)
+    registry = FilesystemModelRegistry(
+        root / ".automo" / "registry",
+        codecs=(LinearModelJsonCodec(),),
+    )
+    manifest = runtime.fit_and_register(
+        "linear",
+        data_source_id="training",
+        registry=registry,
+        seed=42,
+    )
     model = registry.load_model(manifest.id)
     metrics = runtime.evaluate_and_record(
         "linear",

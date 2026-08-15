@@ -13,7 +13,7 @@ status: current
 ## Environment prerequisites
 
 - Python 3.11 or newer.
-- `uv` for development dependency management; normal developers activate `.venv` and invoke installed tools directly.
+- Poetry for development dependency management, test execution, documentation tooling, and package builds.
 - `pip` remains sufficient for installing the built standalone package.
 - No database, network service, credential, or GetDone installation is required for the standalone health gate.
 - GetDone is optional and is installed only through the `getdone` extra.
@@ -26,34 +26,27 @@ python -m pip install .
 
 ## Development build
 
-For a normal developer clone, run the PPW-style one-command bootstrap, then activate the synced environment:
+For a normal developer clone, run the PPW-style one-command bootstrap:
 
 ```bash
 python scripts/init_dev.py
-source .venv/bin/activate
 ```
 
-The bootstrap runs `uv sync --extra dev` and `pre-commit install --install-hooks` using the clone-local `.venv`.
+The bootstrap runs `poetry install --with dev` and `poetry run pre-commit install --install-hooks`.
 
 Ordinary `git commit` then runs `.pre-commit-config.yaml` automatically. The explicit full local source-quality gate is:
 
 ```bash
-pre-commit run --all-files
-```
-
-For ChatGPT/sandbox environments where an activated shell is not persistent, the equivalent project-managed invocation is:
-
-```bash
-uv run --extra dev pre-commit run --all-files
+poetry run pre-commit run --all-files
 ```
 
 Documentation tooling is intentionally separate from the core development gate:
 
 ```bash
-uv sync --extra docs
-uv run zensical serve
+poetry install --with docs
+poetry run zensical serve
 # optional static build check
-uv run zensical build
+poetry run zensical build
 ```
 
 ## Format
@@ -91,7 +84,7 @@ A dedicated third-party type checker is not configured for the 0.1 release bound
 ## Unit tests
 
 ```bash
-uv run --extra dev pytest -q
+poetry run pytest -q
 ```
 
 The dependency-light fallback used by the release health gate is:
@@ -153,5 +146,5 @@ These tests cover protected-evidence hashes, rollback, bounded trial execution, 
 ## Unavailable checks
 
 - The complete pre-commit gate requires its remote hook environments. If the current environment is offline and those environments are not already cached, `scripts/source_check.py` remains the dependency-free fallback for local source-hygiene evidence; this does not satisfy EC-013.
-- Zensical is documentation tooling, not a release blocker. Run `uv run --extra docs zensical serve` or `uv run --extra docs zensical build` when documentation dependencies are available.
+- Zensical is documentation tooling, not a release blocker. Run `poetry run zensical serve` or `poetry run zensical build` after installing the docs group when documentation dependencies are available.
 - A standalone GetDone project-validator executable is not bundled with Automo. GetDone-specific validation is available only when the optional integration package supplies it.
