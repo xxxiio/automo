@@ -8,7 +8,12 @@ from typing import Annotated
 
 import typer
 
-from automo.capabilities import CapabilityLifecycleError, create_getdone_handoff, fulfill_capability, inspect_capability
+from automo.capabilities import (
+    CapabilityLifecycleError,
+    create_getdone_handoff,
+    fulfill_capability,
+    inspect_capability,
+)
 from automo.contracts import ContractError
 from automo.decisions import DecisionError, decide_local_run
 from automo.execution import (
@@ -20,10 +25,16 @@ from automo.execution import (
 from automo.execution.local import ExecutionError
 from automo.features import FeatureDispositionError, dispose_local_features
 from automo.findings import FindingError, propose_next_experiment
-from automo.integrations.getdone import GetDoneCapabilityWorkflow
 from automo.governance import GovernanceError, MilestoneOutcome, MilestoneStatus, ResearchGovernance
-from automo.guidance import (GuidanceError, guidance_lock, render_guidance, select_guidance, task_classes, validate_project_agent)
-from automo.promotions import PromotionError, recommend_promotion
+from automo.guidance import (
+    GuidanceError,
+    guidance_lock,
+    render_guidance,
+    select_guidance,
+    task_classes,
+    validate_project_agent,
+)
+from automo.integrations.getdone import GetDoneCapabilityWorkflow
 from automo.prerequisites import (
     DataAvailability,
     MappingDataCatalogue,
@@ -31,12 +42,16 @@ from automo.prerequisites import (
     validate_prerequisites,
 )
 from automo.project import ResearchProject
+from automo.promotions import PromotionError, recommend_promotion
+from automo.refresh import DataIteration, FilesystemPoolStore, RefreshError, RefreshService
 from automo.registry import FilesystemModelRegistry, ModelStatus, RegistryError
 from automo.research import (
-    FilesystemResearchStore, ResearchBudget, ResearchError, ResearchSafeguards,
-    ResearchSearchSpace, ResearchService, ResearchStoreError,
+    FilesystemResearchStore,
+    ResearchBudget,
+    ResearchError,
+    ResearchSafeguards,
+    ResearchService,
 )
-from automo.refresh import DataIteration, FilesystemPoolStore, RefreshError, RefreshService
 from automo.runtime import ResearchRuntime, load_project_plugin
 from automo.ux import (
     doctor_checks,
@@ -47,6 +62,8 @@ from automo.ux import (
     render_plan,
     render_status,
     run_next_transition,
+)
+from automo.ux import (
     validate_project as validate_mr_project,
 )
 
@@ -64,9 +81,16 @@ stability_app = typer.Typer(help="Advanced temporal-stability commands.", no_arg
 promotion_app = typer.Typer(help="Advanced promotion commands.", no_args_is_help=True)
 capability_app = typer.Typer(help="Capability request lifecycle.", no_args_is_help=True)
 integration_app = typer.Typer(help="Optional workflow integrations.", no_args_is_help=True)
-models_app = typer.Typer(help="Inspect and manage registered model lifecycle state.", no_args_is_help=True)
-refresh_app = typer.Typer(help="Refresh retained models against a new immutable data iteration.", invoke_without_command=True)
-research_app = typer.Typer(help="Plan and execute bounded automated research.", no_args_is_help=True)
+models_app = typer.Typer(
+    help="Inspect and manage registered model lifecycle state.", no_args_is_help=True
+)
+refresh_app = typer.Typer(
+    help="Refresh retained models against a new immutable data iteration.",
+    invoke_without_command=True,
+)
+research_app = typer.Typer(
+    help="Plan and execute bounded automated research.", no_args_is_help=True
+)
 app.add_typer(experiment_app, name="experiment")
 app.add_typer(features_app, name="features")
 app.add_typer(findings_app, name="findings")
@@ -78,9 +102,9 @@ app.add_typer(models_app, name="models")
 app.add_typer(refresh_app, name="refresh")
 app.add_typer(research_app, name="research")
 
+
 def _root_option() -> Path:
     return Path.cwd()
-
 
 
 def _refresh_components(root: Path, pool_id: str, data_source_id: str, split_id: str):
@@ -110,8 +134,6 @@ def _refresh_components(root: Path, pool_id: str, data_source_id: str, split_id:
     return runtime, pool, split, registry
 
 
-
-
 def _research_components(root: Path, space_id: str):
     plugin = load_project_plugin(root)
     runtime = ResearchRuntime(plugin)
@@ -126,7 +148,9 @@ def _research_components(root: Path, space_id: str):
         if codec is not None:
             registry.register_codec(codec)
     store = FilesystemResearchStore(root / ".automo" / "research")
-    service = ResearchService(runtime, split_strategies=plugin.split_strategies, store=store, registry=registry)
+    service = ResearchService(
+        runtime, split_strategies=plugin.split_strategies, store=store, registry=registry
+    )
     return runtime, space, store, service
 
 
@@ -147,10 +171,18 @@ def research_plan(
     try:
         _, search_space, _, service = _research_components(root, space)
         plan = service.plan(
-            iteration_id=iteration, baseline_model_spec_id=baseline, data_source_id=data_source,
-            split_strategy_id=split, diagnosis=diagnosis, findings=tuple(finding or ()),
+            iteration_id=iteration,
+            baseline_model_spec_id=baseline,
+            data_source_id=data_source,
+            split_strategy_id=split,
+            diagnosis=diagnosis,
+            findings=tuple(finding or ()),
             search_space=search_space,
-            budget=ResearchBudget(maximum_candidates=maximum_candidates, maximum_model_fits=max(maximum_candidates + 1, 2), maximum_oos_candidates=maximum_oos_candidates),
+            budget=ResearchBudget(
+                maximum_candidates=maximum_candidates,
+                maximum_model_fits=max(maximum_candidates + 1, 2),
+                maximum_oos_candidates=maximum_oos_candidates,
+            ),
             safeguards=ResearchSafeguards(minimum_improvement=minimum_improvement),
         )
     except Exception as exc:
@@ -159,7 +191,9 @@ def research_plan(
     typer.echo(f"Diagnosis: {plan.diagnosis}")
     typer.echo(f"Candidates: {len(plan.candidates)}")
     for candidate in plan.candidates:
-        typer.echo(f"- {candidate.id}: {candidate.intervention.kind.value} {dict(candidate.intervention.values)}")
+        typer.echo(
+            f"- {candidate.id}: {candidate.intervention.kind.value} {dict(candidate.intervention.values)}"
+        )
 
 
 @research_app.command("run")
@@ -201,7 +235,9 @@ def research_history(
     store = FilesystemResearchStore(root / ".automo" / "research")
     for path in store.history():
         payload = json.loads(path.read_text(encoding="utf-8"))
-        typer.echo(f"{path.parent.name} validation={payload.get('validation_trials', 0)} oos={payload.get('oos_trials', 0)}")
+        typer.echo(
+            f"{path.parent.name} validation={payload.get('validation_trials', 0)} oos={payload.get('oos_trials', 0)}"
+        )
 
 
 @research_app.command("show")
@@ -210,7 +246,11 @@ def research_show(
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
     directory = root / ".automo" / "research" / iteration
-    path = directory / "report.json" if (directory / "report.json").is_file() else directory / "plan.json"
+    path = (
+        directory / "report.json"
+        if (directory / "report.json").is_file()
+        else directory / "plan.json"
+    )
     if not path.is_file():
         raise typer.Exit(_error(f"unknown research iteration: {iteration}"))
     typer.echo(path.read_text(encoding="utf-8"), nl=False)
@@ -226,17 +266,27 @@ def research_candidates(
         raise typer.Exit(_error(f"unknown research iteration: {iteration}"))
     payload = json.loads(path.read_text(encoding="utf-8"))
     for item in payload.get("candidates", []):
-        typer.echo(f"{item['id']} {item['intervention']['kind']} {item['intervention']['values']} fingerprint={item['fingerprint'][:12]}")
+        typer.echo(
+            f"{item['id']} {item['intervention']['kind']} {item['intervention']['values']} fingerprint={item['fingerprint'][:12]}"
+        )
 
 
 @refresh_app.callback(invoke_without_command=True)
 def refresh_command(
     ctx: typer.Context,
     pool: Annotated[str | None, typer.Option("--pool", help="Configured model pool id.")] = None,
-    data_source: Annotated[str | None, typer.Option("--data-source", help="Configured data source id.")] = None,
-    split: Annotated[str | None, typer.Option("--split", help="Configured split strategy id.")] = None,
-    iteration: Annotated[str | None, typer.Option("--iteration", help="Immutable data iteration id.")] = None,
-    dry_run: Annotated[bool, typer.Option("--dry-run", help="Plan without fitting or persisting refresh state.")] = False,
+    data_source: Annotated[
+        str | None, typer.Option("--data-source", help="Configured data source id.")
+    ] = None,
+    split: Annotated[
+        str | None, typer.Option("--split", help="Configured split strategy id.")
+    ] = None,
+    iteration: Annotated[
+        str | None, typer.Option("--iteration", help="Immutable data iteration id.")
+    ] = None,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Plan without fitting or persisting refresh state.")
+    ] = False,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
     if ctx.invoked_subcommand is not None:
@@ -244,14 +294,22 @@ def refresh_command(
     if not all((pool, data_source, split, iteration)):
         raise typer.BadParameter("--pool, --data-source, --split and --iteration are required")
     try:
-        runtime, pool_spec, split_spec, registry = _refresh_components(root, pool, data_source, split)
+        runtime, pool_spec, split_spec, registry = _refresh_components(
+            root, pool, data_source, split
+        )
         snapshot = runtime.data_sources[data_source].snapshot()
         data_iteration = DataIteration(iteration, snapshot.id, snapshot.content_hash)
         service = RefreshService(
-            runtime, registry, FilesystemPoolStore(root / ".automo" / "pools"),
-            calibrators=runtime.plugin.calibrators, selectors=runtime.plugin.model_selectors, refresh_root=root / ".automo" / "refresh",
+            runtime,
+            registry,
+            FilesystemPoolStore(root / ".automo" / "pools"),
+            calibrators=runtime.plugin.calibrators,
+            selectors=runtime.plugin.model_selectors,
+            refresh_root=root / ".automo" / "refresh",
         )
-        result = service.run(pool_spec, data_iteration, split_spec, data_source_id=data_source, dry_run=dry_run)
+        result = service.run(
+            pool_spec, data_iteration, split_spec, data_source_id=data_source, dry_run=dry_run
+        )
     except Exception as exc:
         raise typer.Exit(_error(str(exc))) from exc
     typer.echo(json.dumps(result, indent=2, sort_keys=True, default=str))
@@ -266,7 +324,9 @@ def refresh_history(
         return
     for path in sorted(refresh_root.glob("*/report.json")):
         payload = json.loads(path.read_text(encoding="utf-8"))
-        typer.echo(f"{path.parent.name}  retained={','.join(payload.get('retained_model_ids', []))}")
+        typer.echo(
+            f"{path.parent.name}  retained={','.join(payload.get('retained_model_ids', []))}"
+        )
 
 
 @refresh_app.command("show")
@@ -306,21 +366,37 @@ def _root_option() -> Path:
     return Path.cwd()
 
 
-
-
 @app.command("guidance")
 def guidance_command(
     task_class: Annotated[str, typer.Option("--task-class", help="Research task class.")],
-    concern: Annotated[list[str] | None, typer.Option("--concern", help="Project-defined concern; repeat as needed.")] = None,
-    changed_path: Annotated[list[str] | None, typer.Option("--changed-path", help="Relevant project path; repeat for inference.")] = None,
-    no_project_agent: Annotated[bool, typer.Option("--no-project-agent", help="Disable .project-agent/automo discovery.")] = False,
-    paths_only: Annotated[bool, typer.Option("--paths-only", help="Emit selected guidance paths only.")] = False,
-    explain: Annotated[bool, typer.Option("--explain", help="Show guidance source provenance.")] = False,
+    concern: Annotated[
+        list[str] | None,
+        typer.Option("--concern", help="Project-defined concern; repeat as needed."),
+    ] = None,
+    changed_path: Annotated[
+        list[str] | None,
+        typer.Option("--changed-path", help="Relevant project path; repeat for inference."),
+    ] = None,
+    no_project_agent: Annotated[
+        bool, typer.Option("--no-project-agent", help="Disable .project-agent/automo discovery.")
+    ] = False,
+    paths_only: Annotated[
+        bool, typer.Option("--paths-only", help="Emit selected guidance paths only.")
+    ] = False,
+    explain: Annotated[
+        bool, typer.Option("--explain", help="Show guidance source provenance.")
+    ] = False,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
     """Select canonical research guidance plus additive .project-agent/automo rules."""
     try:
-        docs = select_guidance(task_class, project_root=root, concerns=tuple(concern or ()), changed_paths=tuple(changed_path or ()), use_project_agent=not no_project_agent)
+        docs = select_guidance(
+            task_class,
+            project_root=root,
+            concerns=tuple(concern or ()),
+            changed_paths=tuple(changed_path or ()),
+            use_project_agent=not no_project_agent,
+        )
         typer.echo(render_guidance(docs, paths_only=paths_only, explain=explain), nl=False)
     except GuidanceError as exc:
         raise typer.Exit(_error(str(exc))) from exc
@@ -340,7 +416,7 @@ def guidance_check_command(
         status, _ = guidance_lock(root)
     except GuidanceError as exc:
         raise typer.Exit(_error(str(exc))) from exc
-    typer.echo(f"project-agent: valid")
+    typer.echo("project-agent: valid")
     typer.echo(f"guidance-lock: {status}")
     if status not in {"current", "missing"}:
         raise typer.Exit(1)
@@ -348,7 +424,9 @@ def guidance_check_command(
 
 @app.command("guidance-lock")
 def guidance_lock_command(
-    write: Annotated[bool, typer.Option("--write", help="Write the reviewed current composition lock.")] = False,
+    write: Annotated[
+        bool, typer.Option("--write", help="Write the reviewed current composition lock.")
+    ] = False,
     plan: Annotated[bool, typer.Option("--plan", help="Show lock status without writing.")] = False,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
@@ -374,8 +452,11 @@ def research_milestone_create(
     """Create a proposed bounded research milestone and enter plan mode."""
     try:
         item = ResearchGovernance(root).create_milestone(
-            milestone_id, question=question, why_next=why_next,
-            exit_criteria=tuple(exit_criterion), non_goals=tuple(non_goal or ()),
+            milestone_id,
+            question=question,
+            why_next=why_next,
+            exit_criteria=tuple(exit_criterion),
+            non_goals=tuple(non_goal or ()),
         )
     except GovernanceError as exc:
         raise typer.Exit(_error(str(exc))) from exc
@@ -428,14 +509,18 @@ def research_milestone_status(
 @research_app.command("milestone-conclude")
 def research_milestone_conclude(
     milestone_id: str,
-    outcome: Annotated[str, typer.Option("--outcome", help="accepted, rejected, inconclusive, or invalid")],
+    outcome: Annotated[
+        str, typer.Option("--outcome", help="accepted, rejected, inconclusive, or invalid")
+    ],
     conclusion: Annotated[str, typer.Option("--conclusion")],
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
     """Conclude an active research milestone and return to plan mode."""
     try:
         item = ResearchGovernance(root).conclude(
-            milestone_id, outcome=MilestoneOutcome(outcome), conclusion=conclusion,
+            milestone_id,
+            outcome=MilestoneOutcome(outcome),
+            conclusion=conclusion,
         )
     except (GovernanceError, ValueError) as exc:
         raise typer.Exit(_error(str(exc))) from exc
@@ -541,13 +626,17 @@ def plan_command(
         payload = plan_payload(root)
     except (ContractError, OSError, ValueError) as exc:
         raise typer.Exit(_error(str(exc))) from exc
-    typer.echo(json.dumps(payload, indent=2, sort_keys=True) if as_json else render_plan(payload), nl=False)
+    typer.echo(
+        json.dumps(payload, indent=2, sort_keys=True) if as_json else render_plan(payload), nl=False
+    )
 
 
 @app.command("run")
 def run_command(
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
-    run_id: Annotated[str | None, typer.Option("--run-id", help="Optional immutable run id.")] = None,
+    run_id: Annotated[
+        str | None, typer.Option("--run-id", help="Optional immutable run id.")
+    ] = None,
 ) -> None:
     """Execute exactly one legal deterministic transition for the current experiment."""
     try:
@@ -572,6 +661,7 @@ def validate_command(
     if not ok:
         raise typer.Exit(1)
     typer.echo(f"validation passed: {len(warnings)} warning(s)")
+
 
 @experiment_app.command("next")
 @app.command("next", hidden=True)
@@ -618,6 +708,7 @@ def validate_experiment(
 ) -> None:
     """Validate an experiment contract and its declared prerequisites."""
     from automo.contracts import load_experiment
+
     try:
         experiment = load_experiment(root / "research" / "experiments" / f"{experiment_id}.yaml")
     except ContractError as exc:
@@ -644,10 +735,13 @@ def prepare_experiment(
     experiment_id: str,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
     seed: Annotated[int, typer.Option("--seed", help="Deterministic fitting seed.")] = 42,
-    run_id: Annotated[str | None, typer.Option("--run-id", help="Optional immutable run id.")] = None,
+    run_id: Annotated[
+        str | None, typer.Option("--run-id", help="Optional immutable run id.")
+    ] = None,
 ) -> None:
     """Fit and validate the candidate, then persist its freeze contract."""
     from automo.contracts import load_experiment
+
     try:
         experiment = load_experiment(root / "research" / "experiments" / f"{experiment_id}.yaml")
         result = prepare_local_experiment(root, experiment, seed=seed, run_id=run_id)
@@ -681,10 +775,13 @@ def run_experiment(
     experiment_id: str,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
     seed: Annotated[int, typer.Option("--seed", help="Deterministic fitting seed.")] = 42,
-    run_id: Annotated[str | None, typer.Option("--run-id", help="Optional immutable run id.")] = None,
+    run_id: Annotated[
+        str | None, typer.Option("--run-id", help="Optional immutable run id.")
+    ] = None,
 ) -> None:
     """Run the supported local baseline-versus-candidate experiment."""
     from automo.contracts import load_experiment
+
     try:
         experiment = load_experiment(root / "research" / "experiments" / f"{experiment_id}.yaml")
         result = run_local_experiment(root, experiment, seed=seed, run_id=run_id)
@@ -702,10 +799,13 @@ def run_experiment(
 def run_temporal_stability_command(
     experiment_id: str,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
-    run_id: Annotated[str | None, typer.Option("--run-id", help="Optional immutable run id.")] = None,
+    run_id: Annotated[
+        str | None, typer.Option("--run-id", help="Optional immutable run id.")
+    ] = None,
 ) -> None:
     """Run only the experiment's committed predefined temporal folds."""
     from automo.contracts import load_experiment
+
     try:
         experiment = load_experiment(root / "research" / "experiments" / f"{experiment_id}.yaml")
         result = run_temporal_stability(root, experiment, run_id=run_id)
@@ -791,7 +891,9 @@ def recommend_promotion_command(
 def capability_status(
     request_id: str,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
-    enabled: Annotated[bool, typer.Option("--enabled", help="Enable explicit GetDone delegation.")] = False,
+    enabled: Annotated[
+        bool, typer.Option("--enabled", help="Enable explicit GetDone delegation.")
+    ] = False,
 ) -> None:
     """Inspect whether a committed capability request can be delegated."""
     workflow = GetDoneCapabilityWorkflow(enabled=enabled)
@@ -803,7 +905,7 @@ def capability_status(
     typer.echo(f"Capability: {payload['capability_id']}")
     typer.echo(f"Provider: {payload['provider']}")
     typer.echo(f"Ready: {'yes' if payload['ready_for_delegation'] else 'no'}")
-    typer.echo(str(payload['detail']))
+    typer.echo(str(payload["detail"]))
 
 
 @capability_app.command("handoff")
@@ -825,15 +927,17 @@ def capability_handoff(
 def fulfill_capability_command(
     request_id: str,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
-    attempt_id: Annotated[str, typer.Option("--attempt-id", help="Immutable capability attempt id.")] = "attempt-0001",
-    enabled: Annotated[bool, typer.Option("--enabled", help="Enable explicit GetDone delegation.")] = False,
+    attempt_id: Annotated[
+        str, typer.Option("--attempt-id", help="Immutable capability attempt id.")
+    ] = "attempt-0001",
+    enabled: Annotated[
+        bool, typer.Option("--enabled", help="Enable explicit GetDone delegation.")
+    ] = False,
 ) -> None:
     """Create one immutable bounded capability-attempt result."""
     workflow = GetDoneCapabilityWorkflow(enabled=enabled)
     try:
-        result = fulfill_capability(
-            root, request_id, attempt_id=attempt_id, delegate=workflow
-        )
+        result = fulfill_capability(root, request_id, attempt_id=attempt_id, delegate=workflow)
     except CapabilityLifecycleError as exc:
         raise typer.Exit(_error(str(exc))) from exc
     typer.echo(f"Request: {result.request_id}")
@@ -910,7 +1014,10 @@ def models_pool_history(
 ) -> None:
     store = FilesystemPoolStore(root / ".automo" / "pools")
     for snapshot in store.history(pool_id):
-        typer.echo(f"{snapshot.iteration_id}  active={','.join(snapshot.active_model_ids)}  selected={','.join(snapshot.selected_model_ids)}")
+        typer.echo(
+            f"{snapshot.iteration_id}  active={','.join(snapshot.active_model_ids)}  selected={','.join(snapshot.selected_model_ids)}"
+        )
+
 
 def main() -> None:
     app()
@@ -922,6 +1029,7 @@ if __name__ == "__main__":
 
 def _model_registry(root: Path) -> FilesystemModelRegistry:
     from automo.runtime.builtins import LinearModelJsonCodec
+
     return FilesystemModelRegistry(root / ".automo" / "registry", codecs=(LinearModelJsonCodec(),))
 
 
@@ -934,7 +1042,9 @@ def _primary_benchmark(record):
 @models_app.command("list")
 def models_list(
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
-    status: Annotated[str | None, typer.Option("--status", help="Optional lifecycle status filter.")] = None,
+    status: Annotated[
+        str | None, typer.Option("--status", help="Optional lifecycle status filter.")
+    ] = None,
     as_json: Annotated[bool, typer.Option("--json", help="Emit machine-readable JSON.")] = False,
 ) -> None:
     """List registered models without loading model artifacts."""
@@ -946,25 +1056,31 @@ def models_list(
     payload = []
     for record in records:
         benchmark = _primary_benchmark(record)
-        payload.append({
-            "id": record.manifest.id,
-            "implementation": record.manifest.implementation,
-            "objective": record.manifest.objective_id,
-            "status": record.status.value,
-            "metric": benchmark.metric_id if benchmark else None,
-            "value": benchmark.value if benchmark else None,
-            "calibration": record.latest_calibration.id if record.latest_calibration else None,
-        })
+        payload.append(
+            {
+                "id": record.manifest.id,
+                "implementation": record.manifest.implementation,
+                "objective": record.manifest.objective_id,
+                "status": record.status.value,
+                "metric": benchmark.metric_id if benchmark else None,
+                "value": benchmark.value if benchmark else None,
+                "calibration": record.latest_calibration.id if record.latest_calibration else None,
+            }
+        )
     if as_json:
         typer.echo(json.dumps(payload, indent=2, sort_keys=True))
         return
     if not payload:
         typer.echo("No registered models.")
         return
-    typer.echo("ID             IMPLEMENTATION          STATUS      OBJECTIVE          METRIC        VALUE")
+    typer.echo(
+        "ID             IMPLEMENTATION          STATUS      OBJECTIVE          METRIC        VALUE"
+    )
     for item in payload:
-        value = "-" if item["value"] is None else f'{item["value"]:.6g}'
-        typer.echo(f'{item["id"]:<14} {item["implementation"]:<23} {item["status"]:<11} {item["objective"]:<18} {(item["metric"] or "-"):<13} {value}')
+        value = "-" if item["value"] is None else f"{item['value']:.6g}"
+        typer.echo(
+            f"{item['id']:<14} {item['implementation']:<23} {item['status']:<11} {item['objective']:<18} {(item['metric'] or '-'):<13} {value}"
+        )
 
 
 @models_app.command("active")
@@ -996,8 +1112,12 @@ def models_show(
         "manifest": record.manifest.as_dict(),
         "provenance": record.provenance.as_dict(),
         "status": record.status.value,
-        "latest_calibration": record.latest_calibration.as_dict() if record.latest_calibration else None,
-        "latest_benchmarks": {key: value.as_dict() for key, value in record.latest_benchmarks.items()},
+        "latest_calibration": record.latest_calibration.as_dict()
+        if record.latest_calibration
+        else None,
+        "latest_benchmarks": {
+            key: value.as_dict() for key, value in record.latest_benchmarks.items()
+        },
     }
     if as_json:
         typer.echo(json.dumps(payload, indent=2, sort_keys=True))

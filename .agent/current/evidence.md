@@ -18,16 +18,16 @@ TASK-0016 — Prepare and verify the Automo 0.3.0a1 public-alpha release candida
 
 | Criterion ID | Status | Evidence |
 |---|---|---|
-| AC-001 | not-run | 127-test suite/source checks pass, but Poetry Core wheel/sdist evidence is stale until the current backend is built in connected CI |
+| AC-001 | not-run | 130-test suite/source checks pass, but Poetry Core wheel/sdist evidence is stale until the current backend is built in connected CI |
 | AC-002 | pass | persistence/API/security/onboarding files and tests |
-| AC-003 | pass | `.github/workflows/ci.yml` and local development execute the same complete pre-commit configuration; pre-commit runs pytest on the project Python and CI separately proves Python 3.11–3.13 compatibility; `scripts/init_dev.py` is stdlib-only before bootstrapping pre-commit/Poetry and validates all three interpreters |
+| AC-003 | pass | `.github/workflows/ci.yml` and local development execute the same complete pre-commit configuration; pre-commit runs `poetry run pytest -q` on the project Python and CI separately proves Python 3.11–3.13 compatibility; `scripts/init_dev.py` is stdlib-only before bootstrapping pre-commit/Poetry |
 | AC-004 | not-run | connected rerun must prove Poetry Core package/smoke, Python 3.11–3.13, and complete pre-commit on the corrected candidate |
 
 ## Quality gate evidence
 
 | Gate | Status | Command or artefact | Result |
 |---|---|---|---|
-| Tests | pass | `PYTHONPATH=src python -m pytest -q` | 127 passed |
+| Tests | pass | `PYTHONPATH=src python -m pytest -q` | 130 passed |
 | Compilation | pass | `python -m compileall -q src tests scripts examples` | passed |
 | Wheel/sdist | not-run | `python scripts/health_gate.py --keep-dist` | current Poetry Core backend cannot be provisioned in the offline sandbox; previous setuptools artifacts are not accepted as evidence |
 | Release health | not-run | `python scripts/health_gate.py --skip-tests --keep-dist` | build phase awaits Poetry Core/build dependencies in connected CI; source/tests/compile portions pass locally |

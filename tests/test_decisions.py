@@ -25,7 +25,7 @@ def _copy_completed_run(tmp_path: Path, name: str = "run") -> tuple[Path, Path]:
 
 
 def test_completed_run_produces_one_accepted_decision(tmp_path: Path) -> None:
-    project, run = _copy_completed_run(tmp_path, "accepted")
+    project, _run = _copy_completed_run(tmp_path, "accepted")
     result = decide_local_run(project, "accepted")
     payload = json.loads(result.decision_path.read_text())
     assert result.outcome is DecisionOutcome.ACCEPTED

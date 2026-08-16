@@ -8,8 +8,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from automo.capabilities.contracts import CapabilityRequest, CapabilityResultStatus
-from automo.capabilities.contracts import load_capability_request
+from automo.capabilities.contracts import (
+    CapabilityRequest,
+    CapabilityResultStatus,
+    load_capability_request,
+)
 from automo.contracts import ContractError
 from automo.integrations.base import IntegrationStatus
 
@@ -46,7 +49,9 @@ def capability_request_path(root: Path, request_id: str) -> Path:
     return governed if governed.is_file() or not legacy.is_file() else legacy
 
 
-def inspect_capability(root: Path, request_id: str, delegate: CapabilityDelegate) -> dict[str, object]:
+def inspect_capability(
+    root: Path, request_id: str, delegate: CapabilityDelegate
+) -> dict[str, object]:
     request = _load_request(root, request_id)
     status = delegate.status()
     attempts = _persisted_attempts(root, request.identifier)
@@ -93,7 +98,9 @@ def fulfill_capability(
         actual_changes = _actual_changes(root, workspace_before)
         protected_after = _protected_hashes(root)
         if protected_before != protected_after:
-            raise CapabilityLifecycleError("capability workflow altered protected research evidence")
+            raise CapabilityLifecycleError(
+                "capability workflow altered protected research evidence"
+            )
         if set(actual_changes) != set(fulfillment.changed_files):
             raise CapabilityLifecycleError(
                 "capability workflow changed files that do not match its declared changed_files"
@@ -125,10 +132,12 @@ def fulfill_capability(
             "all_changes_within_scope": True,
             "protected_evidence_unchanged": True,
             "evidence_supplied": bool(fulfillment.evidence)
-                if fulfillment.status == CapabilityResultStatus.FULFILLED else None,
+            if fulfillment.status == CapabilityResultStatus.FULFILLED
+            else None,
             "passed": (
                 bool(fulfillment.evidence)
-                if fulfillment.status == CapabilityResultStatus.FULFILLED else True
+                if fulfillment.status == CapabilityResultStatus.FULFILLED
+                else True
             ),
         },
         "scope": {
@@ -148,7 +157,6 @@ def fulfill_capability(
         result_path=result_path,
         detail=fulfillment.detail,
     )
-
 
 
 def create_getdone_handoff(root: Path, request_id: str) -> Path:
@@ -190,6 +198,7 @@ def create_getdone_handoff(root: Path, request_id: str) -> Path:
     ]
     path.write_text("\n".join(lines), encoding="utf-8")
     return path
+
 
 def _load_request(root: Path, request_id: str) -> CapabilityRequest:
     try:
@@ -280,9 +289,11 @@ def _persisted_attempts(root: Path, request_id: str) -> list[dict[str, str]]:
             payload = json.loads(result_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             continue
-        attempts.append({
-            "attempt_id": str(payload.get("attempt_id", result_path.parent.name)),
-            "status": str(payload.get("status", "unknown")),
-            "result_path": result_path.relative_to(root).as_posix(),
-        })
+        attempts.append(
+            {
+                "attempt_id": str(payload.get("attempt_id", result_path.parent.name)),
+                "status": str(payload.get("status", "unknown")),
+                "result_path": result_path.relative_to(root).as_posix(),
+            }
+        )
     return attempts

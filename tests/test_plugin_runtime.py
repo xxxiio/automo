@@ -5,7 +5,9 @@ import pytest
 from automo.runtime import PluginLoadError, load_project_plugin
 
 
-def test_project_plugin_can_be_loaded_from_thin_factory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_project_plugin_can_be_loaded_from_thin_factory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     package = tmp_path / "demo_plugin.py"
     package.write_text(
         "from automo.runtime import ResearchPlugin\n"
@@ -23,5 +25,5 @@ def test_project_plugin_can_be_loaded_from_thin_factory(tmp_path: Path, monkeypa
 
 
 def test_missing_project_plugin_is_actionable(tmp_path: Path) -> None:
-    with pytest.raises(PluginLoadError, match="automo.toml"):
+    with pytest.raises(PluginLoadError, match=r"automo\.toml"):
         load_project_plugin(tmp_path)

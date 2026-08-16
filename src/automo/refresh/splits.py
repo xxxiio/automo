@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Any
 
 from automo.runtime.contracts import DataSnapshot
+
 from .contracts import DataPartition, EvaluationPartitions
 
 
@@ -65,8 +65,12 @@ class HashSplit:
             bucket = "fit" if value < fit_cut else "validation" if value < val_cut else "test"
             buckets[bucket].append(i)
         if not all(buckets.values()):
-            raise ValueError("hash split produced an empty partition; provide more rows or a predefined split")
-        return EvaluationPartitions(*(DataPartition(name, tuple(buckets[name])) for name in ("fit", "validation", "test")))
+            raise ValueError(
+                "hash split produced an empty partition; provide more rows or a predefined split"
+            )
+        return EvaluationPartitions(
+            *(DataPartition(name, tuple(buckets[name])) for name in ("fit", "validation", "test"))
+        )
 
 
 @dataclass(frozen=True)

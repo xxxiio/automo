@@ -51,7 +51,9 @@ def run_temporal_stability(
     if experiment.split_spec != "SPLIT-PREDEFINED-TEMPORAL-FOLDS-0001":
         raise ExecutionError(f"unsupported temporal split specification: {experiment.split_spec}")
     if experiment.evaluation_spec != "EVALUATION-TEMPORAL-STABILITY-0001":
-        raise ExecutionError(f"unsupported temporal evaluation specification: {experiment.evaluation_spec}")
+        raise ExecutionError(
+            f"unsupported temporal evaluation specification: {experiment.evaluation_spec}"
+        )
     if experiment.maximum_trials < len(PREDEFINED_FOLDS):
         raise ExecutionError(
             f"experiment trial budget {experiment.maximum_trials} is below committed fold count {len(PREDEFINED_FOLDS)}"
@@ -72,7 +74,9 @@ def run_temporal_stability(
     for order, fold in enumerate(PREDEFINED_FOLDS, start=1):
         training = tuple(row for row in rows if int(row.timestamp[:4]) <= fold.training_end_year)
         validation = tuple(row for row in rows if int(row.timestamp[:4]) == fold.validation_year)
-        out_of_sample = tuple(row for row in rows if int(row.timestamp[:4]) == fold.out_of_sample_year)
+        out_of_sample = tuple(
+            row for row in rows if int(row.timestamp[:4]) == fold.out_of_sample_year
+        )
         if not training or not validation or not out_of_sample:
             raise ExecutionError(f"fixture cannot satisfy committed fold {fold.identifier}")
         baseline_mean = sum(row.target for row in training) / len(training)

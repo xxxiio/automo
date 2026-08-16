@@ -44,13 +44,11 @@ class PrerequisiteReport:
 
 
 class DataCatalogue(Protocol):
-    def inspect(self, requirement_id: str) -> DataAvailability:
-        ...
+    def inspect(self, requirement_id: str) -> DataAvailability: ...
 
 
 class CapabilityCatalogue(Protocol):
-    def contains(self, requirement_id: str) -> bool:
-        ...
+    def contains(self, requirement_id: str) -> bool: ...
 
 
 class MappingDataCatalogue:

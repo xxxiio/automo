@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import asdict
 from pathlib import Path
-from typing import Iterable
 
 from automo.persistence import read_json_artifact, write_json_artifact
 
@@ -81,9 +81,15 @@ class FilesystemResearchStore:
 
     def load_plan(self, iteration_id: str):
         from .contracts import (
-            CandidateProposal, InterventionKind, ResearchBudget, ResearchIntervention,
-            ResearchPlan, ResearchSafeguards, ResearchSearchSpace,
+            CandidateProposal,
+            InterventionKind,
+            ResearchBudget,
+            ResearchIntervention,
+            ResearchPlan,
+            ResearchSafeguards,
+            ResearchSearchSpace,
         )
+
         path = self.iteration_dir(iteration_id) / "plan.json"
         if not path.is_file():
             raise ResearchStoreError(f"unknown research iteration: {iteration_id}")
@@ -94,7 +100,9 @@ class FilesystemResearchStore:
             model_spec_ids=tuple(space_raw.get("model_spec_ids", [])),
             feature_set_ids=tuple(space_raw.get("feature_set_ids", [])),
             calibrator_ids=tuple(space_raw.get("calibrator_ids", [])),
-            parameter_choices={k: tuple(v) for k, v in space_raw.get("parameter_choices", {}).items()},
+            parameter_choices={
+                k: tuple(v) for k, v in space_raw.get("parameter_choices", {}).items()
+            },
             maximum_compound_interventions=int(space_raw.get("maximum_compound_interventions", 1)),
         )
         budget = ResearchBudget(**raw["budget"])
@@ -102,15 +110,26 @@ class FilesystemResearchStore:
         candidates = []
         for item in raw["candidates"]:
             iv = item["intervention"]
-            candidates.append(CandidateProposal(
-                id=item["id"], baseline_model_spec_id=item["baseline_model_spec_id"],
-                intervention=ResearchIntervention(InterventionKind(iv["kind"]), iv["values"]),
-                rationale=tuple(item.get("rationale", [])), expected_effect=item.get("expected_effect", ""),
-                falsification=tuple(item.get("falsification", [])), priority=int(item.get("priority", 0)),
-            ))
+            candidates.append(
+                CandidateProposal(
+                    id=item["id"],
+                    baseline_model_spec_id=item["baseline_model_spec_id"],
+                    intervention=ResearchIntervention(InterventionKind(iv["kind"]), iv["values"]),
+                    rationale=tuple(item.get("rationale", [])),
+                    expected_effect=item.get("expected_effect", ""),
+                    falsification=tuple(item.get("falsification", [])),
+                    priority=int(item.get("priority", 0)),
+                )
+            )
         return ResearchPlan(
-            id=raw["id"], baseline_model_spec_id=raw["baseline_model_spec_id"],
-            data_source_id=raw["data_source_id"], split_strategy_id=raw["split_strategy_id"],
-            diagnosis=raw["diagnosis"], findings=tuple(raw.get("findings", [])), search_space=space,
-            budget=budget, safeguards=safeguards, candidates=tuple(candidates),
+            id=raw["id"],
+            baseline_model_spec_id=raw["baseline_model_spec_id"],
+            data_source_id=raw["data_source_id"],
+            split_strategy_id=raw["split_strategy_id"],
+            diagnosis=raw["diagnosis"],
+            findings=tuple(raw.get("findings", [])),
+            search_space=space,
+            budget=budget,
+            safeguards=safeguards,
+            candidates=tuple(candidates),
         )

@@ -1,4 +1,5 @@
 """Project-owned research governance under ``.automo``."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -117,8 +118,13 @@ class ResearchGovernance:
         return tuple(created)
 
     def create_milestone(
-        self, identifier: str, *, question: str, why_next: str,
-        exit_criteria: tuple[str, ...], non_goals: tuple[str, ...] = (),
+        self,
+        identifier: str,
+        *,
+        question: str,
+        why_next: str,
+        exit_criteria: tuple[str, ...],
+        non_goals: tuple[str, ...] = (),
     ) -> ResearchMilestone:
         if not exit_criteria:
             raise GovernanceError("research milestone requires at least one exit criterion")
@@ -126,7 +132,9 @@ class ResearchGovernance:
         path = self.milestones / f"{identifier}.yaml"
         if path.exists():
             raise GovernanceError(f"research milestone already exists: {identifier}")
-        milestone = ResearchMilestone(identifier, question, why_next, MilestoneStatus.PROPOSED, exit_criteria, non_goals)
+        milestone = ResearchMilestone(
+            identifier, question, why_next, MilestoneStatus.PROPOSED, exit_criteria, non_goals
+        )
         _write_yaml(path, milestone.as_dict())
         roadmap = _load_yaml(self.state / "roadmap.yaml")
         roadmap.setdefault("milestones", []).append(identifier)
@@ -141,8 +149,11 @@ class ResearchGovernance:
         raw = _load_yaml(path)
         try:
             return ResearchMilestone(
-                id=str(raw["id"]), question=str(raw["question"]), why_next=str(raw["why_next"]),
-                status=MilestoneStatus(raw["status"]), exit_criteria=tuple(raw.get("exit_criteria", ())),
+                id=str(raw["id"]),
+                question=str(raw["question"]),
+                why_next=str(raw["why_next"]),
+                status=MilestoneStatus(raw["status"]),
+                exit_criteria=tuple(raw.get("exit_criteria", ())),
                 non_goals=tuple(raw.get("non_goals", ())),
                 outcome=MilestoneOutcome(raw["outcome"]) if raw.get("outcome") else None,
                 conclusion=raw.get("conclusion"),
@@ -151,44 +162,75 @@ class ResearchGovernance:
             raise GovernanceError(f"invalid research milestone contract: {path}") from exc
 
     def current_milestone(self) -> ResearchMilestone | None:
-        project = _load_yaml(self.state / "project.yaml") if (self.state / "project.yaml").is_file() else {}
+        project = (
+            _load_yaml(self.state / "project.yaml")
+            if (self.state / "project.yaml").is_file()
+            else {}
+        )
         identifier = project.get("current_milestone")
         return self.load(str(identifier)) if identifier else None
 
     def transition(self, identifier: str, target: MilestoneStatus) -> ResearchMilestone:
         milestone = self.load(identifier)
         if target not in _ALLOWED[milestone.status]:
-            raise GovernanceError(f"illegal research milestone transition: {milestone.status.value} -> {target.value}")
+            raise GovernanceError(
+                f"illegal research milestone transition: {milestone.status.value} -> {target.value}"
+            )
         updated = ResearchMilestone(
-            milestone.id, milestone.question, milestone.why_next, target,
-            milestone.exit_criteria, milestone.non_goals, milestone.outcome, milestone.conclusion,
+            milestone.id,
+            milestone.question,
+            milestone.why_next,
+            target,
+            milestone.exit_criteria,
+            milestone.non_goals,
+            milestone.outcome,
+            milestone.conclusion,
         )
         _write_yaml(self.milestones / f"{identifier}.yaml", updated.as_dict())
         self._set_current(updated)
         return updated
 
-    def conclude(self, identifier: str, *, outcome: MilestoneOutcome, conclusion: str) -> ResearchMilestone:
+    def conclude(
+        self, identifier: str, *, outcome: MilestoneOutcome, conclusion: str
+    ) -> ResearchMilestone:
         milestone = self.load(identifier)
         if milestone.status != MilestoneStatus.ACTIVE:
             raise GovernanceError("only an active research milestone can be concluded")
         updated = ResearchMilestone(
-            milestone.id, milestone.question, milestone.why_next, MilestoneStatus.CONCLUDED,
-            milestone.exit_criteria, milestone.non_goals, outcome, conclusion,
+            milestone.id,
+            milestone.question,
+            milestone.why_next,
+            MilestoneStatus.CONCLUDED,
+            milestone.exit_criteria,
+            milestone.non_goals,
+            outcome,
+            conclusion,
         )
         _write_yaml(self.milestones / f"{identifier}.yaml", updated.as_dict())
         project = _load_yaml(self.state / "project.yaml")
         project["mode"] = "plan"
         project["current_milestone"] = None
         _write_yaml(self.state / "project.yaml", project)
-        _write_yaml(self.current / "plan.yaml", {
-            "artifact_type": "automo.research_plan_state", "schema_version": 1,
-            "mode": "plan", "milestone_id": None, "execution_allowed": False,
-            "planning_questions": ["Select the highest-priority next research question."],
-        })
-        _write_yaml(self.current / "next-step.yaml", {
-            "artifact_type": "automo.research_next_step", "schema_version": 1,
-            "kind": "plan-milestone", "objective": "Select the highest-priority next research question.",
-        })
+        _write_yaml(
+            self.current / "plan.yaml",
+            {
+                "artifact_type": "automo.research_plan_state",
+                "schema_version": 1,
+                "mode": "plan",
+                "milestone_id": None,
+                "execution_allowed": False,
+                "planning_questions": ["Select the highest-priority next research question."],
+            },
+        )
+        _write_yaml(
+            self.current / "next-step.yaml",
+            {
+                "artifact_type": "automo.research_next_step",
+                "schema_version": 1,
+                "kind": "plan-milestone",
+                "objective": "Select the highest-priority next research question.",
+            },
+        )
         (self.current / "milestone.yaml").unlink(missing_ok=True)
         return updated
 
@@ -197,9 +239,13 @@ class ResearchGovernance:
             return None  # backwards-compatible projects not yet using governance
         milestone = self.current_milestone()
         if milestone is None:
-            raise GovernanceError("research project is in plan mode; approve and activate a milestone before executing research")
+            raise GovernanceError(
+                "research project is in plan mode; approve and activate a milestone before executing research"
+            )
         if milestone.status != MilestoneStatus.ACTIVE:
-            raise GovernanceError(f"research milestone {milestone.id} is {milestone.status.value}; activate it before executing research")
+            raise GovernanceError(
+                f"research milestone {milestone.id} is {milestone.status.value}; activate it before executing research"
+            )
         return milestone
 
     def status_payload(self) -> dict[str, Any]:
@@ -227,9 +273,16 @@ class ResearchGovernance:
         errors: list[str] = []
         if not self.state.exists():
             return ()
-        for required in (self.state / "project.yaml", self.state / "roadmap.yaml", self.current / "plan.yaml", self.current / "next-step.yaml"):
+        for required in (
+            self.state / "project.yaml",
+            self.state / "roadmap.yaml",
+            self.current / "plan.yaml",
+            self.current / "next-step.yaml",
+        ):
             if not required.is_file():
-                errors.append(f"missing Automo research-state contract: {required.relative_to(self.root)}")
+                errors.append(
+                    f"missing Automo research-state contract: {required.relative_to(self.root)}"
+                )
         if errors:
             return tuple(errors)
         expected = {
@@ -249,8 +302,13 @@ class ResearchGovernance:
                 )
         for path in sorted(self.milestones.glob("*.yaml")):
             raw = _load_yaml(path)
-            if raw.get("artifact_type") != "automo.research_milestone" or raw.get("schema_version") != STATE_SCHEMA_VERSION:
-                errors.append(f"{path.relative_to(self.root)} uses an unsupported research-state schema")
+            if (
+                raw.get("artifact_type") != "automo.research_milestone"
+                or raw.get("schema_version") != STATE_SCHEMA_VERSION
+            ):
+                errors.append(
+                    f"{path.relative_to(self.root)} uses an unsupported research-state schema"
+                )
         if errors:
             return tuple(errors)
         try:
@@ -273,17 +331,20 @@ class ResearchGovernance:
         project["mode"] = "research" if milestone.status == MilestoneStatus.ACTIVE else "plan"
         _write_yaml(self.state / "project.yaml", project)
         _write_yaml(self.current / "milestone.yaml", milestone.as_dict())
-        _write_yaml(self.current / "plan.yaml", {
-            "artifact_type": "automo.research_plan_state",
-            "schema_version": 1,
-            "mode": project["mode"],
-            "milestone_id": milestone.id,
-            "question": milestone.question,
-            "why_next": milestone.why_next,
-            "exit_criteria": list(milestone.exit_criteria),
-            "non_goals": list(milestone.non_goals),
-            "execution_allowed": milestone.status == MilestoneStatus.ACTIVE,
-        })
+        _write_yaml(
+            self.current / "plan.yaml",
+            {
+                "artifact_type": "automo.research_plan_state",
+                "schema_version": 1,
+                "mode": project["mode"],
+                "milestone_id": milestone.id,
+                "question": milestone.question,
+                "why_next": milestone.why_next,
+                "exit_criteria": list(milestone.exit_criteria),
+                "non_goals": list(milestone.non_goals),
+                "execution_allowed": milestone.status == MilestoneStatus.ACTIVE,
+            },
+        )
         action = {
             MilestoneStatus.PROPOSED: "Review the proposed milestone and enter planning.",
             MilestoneStatus.PLANNING: "Complete the bounded research plan and approve the milestone.",
@@ -291,10 +352,16 @@ class ResearchGovernance:
             MilestoneStatus.ACTIVE: "Execute exactly the next committed bounded research step.",
             MilestoneStatus.CONCLUDED: "Plan the next research milestone.",
         }[milestone.status]
-        _write_yaml(self.current / "next-step.yaml", {
-            "artifact_type": "automo.research_next_step", "schema_version": 1,
-            "kind": "milestone-transition", "milestone_id": milestone.id, "objective": action,
-        })
+        _write_yaml(
+            self.current / "next-step.yaml",
+            {
+                "artifact_type": "automo.research_next_step",
+                "schema_version": 1,
+                "kind": "milestone-transition",
+                "milestone_id": milestone.id,
+                "objective": action,
+            },
+        )
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:

@@ -7,10 +7,10 @@ import hashlib
 import json
 import platform
 import time
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterable
 
 from automo.contracts import ExperimentSpec
 
@@ -97,7 +97,15 @@ def prepare_local_experiment(
 
     validation_path = run_directory / "validation.json"
     freeze_path = run_directory / "freeze.json"
-    _write_json(validation_path, {"artifact_type": "automo.validation_evidence", "schema_version": 1, "stage": "validation", **asdict(validation_evidence)})
+    _write_json(
+        validation_path,
+        {
+            "artifact_type": "automo.validation_evidence",
+            "schema_version": 1,
+            "stage": "validation",
+            **asdict(validation_evidence),
+        },
+    )
     freeze = {
         "artifact_type": "automo.freeze_contract",
         "schema_version": 1,
@@ -179,7 +187,15 @@ def evaluate_local_out_of_sample(root: Path, run_id: str) -> ExperimentRunResult
     started = time.perf_counter()
     evidence = _evaluate(out_of_sample, float(fitted_state["baseline_mean"]), candidate)
     duration_ms = round((time.perf_counter() - started) * 1000, 3)
-    _write_json(out_of_sample_path, {"artifact_type": "automo.out_of_sample_evidence", "schema_version": 1, "stage": "out-of-sample", **asdict(evidence)})
+    _write_json(
+        out_of_sample_path,
+        {
+            "artifact_type": "automo.out_of_sample_evidence",
+            "schema_version": 1,
+            "stage": "out-of-sample",
+            **asdict(evidence),
+        },
+    )
 
     manifest = {
         "artifact_type": "automo.run_manifest",
@@ -249,7 +265,11 @@ def _verify_frozen_inputs(root: Path, freeze: dict[str, object]) -> None:
         "dataset": (root / str(inputs["data_path"]), str(inputs["data_sha256"])),
         "runner": (Path(__file__).resolve(), str(inputs["runner_sha256"])),
     }
-    changed = [name for name, (path, expected) in checks.items() if not path.exists() or _sha256(path) != expected]
+    changed = [
+        name
+        for name, (path, expected) in checks.items()
+        if not path.exists() or _sha256(path) != expected
+    ]
     if changed:
         raise ExecutionError("post-freeze configuration change detected: " + ", ".join(changed))
     validation = freeze.get("validation")
@@ -275,7 +295,9 @@ def _validate_supported_contract(experiment: ExperimentSpec) -> None:
     }
     unsupported = [key for key, value in actual.items() if value != expected[key]]
     if unsupported:
-        raise ExecutionError("local runner does not support contract fields: " + ", ".join(unsupported))
+        raise ExecutionError(
+            "local runner does not support contract fields: " + ", ".join(unsupported)
+        )
 
 
 def _load_fixture(path: Path) -> tuple[Observation, ...]:
@@ -322,9 +344,9 @@ def _fit_linear(rows: tuple[Observation, ...]) -> FittedLinearModel:
     denominator = sum((row.feature_1 - mean_x) ** 2 for row in rows)
     if denominator == 0:
         raise ExecutionError("candidate cannot fit a constant feature")
-    coefficient = sum(
-        (row.feature_1 - mean_x) * (row.target - mean_y) for row in rows
-    ) / denominator
+    coefficient = (
+        sum((row.feature_1 - mean_x) * (row.target - mean_y) for row in rows) / denominator
+    )
     return FittedLinearModel(mean_y - coefficient * mean_x, coefficient)
 
 
@@ -334,9 +356,9 @@ def _evaluate(
     candidate: FittedLinearModel,
 ) -> MetricEvidence:
     baseline_mse = sum((row.target - baseline_mean) ** 2 for row in rows) / len(rows)
-    candidate_mse = sum(
-        (row.target - candidate.predict(row.feature_1)) ** 2 for row in rows
-    ) / len(rows)
+    candidate_mse = sum((row.target - candidate.predict(row.feature_1)) ** 2 for row in rows) / len(
+        rows
+    )
     return MetricEvidence(
         observations=len(rows),
         baseline_mse=round(baseline_mse, 12),

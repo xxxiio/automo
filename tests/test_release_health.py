@@ -1,30 +1,31 @@
 from __future__ import annotations
 
-from pathlib import Path
 import subprocess
 import sys
+from contextlib import suppress
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_source_check_passes() -> None:
     completed = subprocess.run(
-        [sys.executable, 'scripts/source_check.py'], cwd=ROOT, capture_output=True, text=True
+        [sys.executable, "scripts/source_check.py"], cwd=ROOT, capture_output=True, text=True
     )
     assert completed.returncode == 0, completed.stderr
 
 
 def test_command_reference_has_no_placeholders() -> None:
-    text = (ROOT / '.agent' / 'command-reference.md').read_text(encoding='utf-8')
-    assert '<!--' not in text
-    assert 'Canonical full health gate' in text
-    assert 'scripts/health_gate.py' in text
+    text = (ROOT / ".agent" / "command-reference.md").read_text(encoding="utf-8")
+    assert "<!--" not in text
+    assert "Canonical full health gate" in text
+    assert "scripts/health_gate.py" in text
 
 
 def test_distribution_has_no_required_getdone_dependency() -> None:
-    text = (ROOT / 'pyproject.toml').read_text(encoding='utf-8')
-    base = text.split('[project.optional-dependencies]', 1)[0]
-    assert 'get-done' not in base
+    text = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    base = text.split("[project.optional-dependencies]", 1)[0]
+    assert "get-done" not in base
     assert 'getdone = ["getdone-dev' in text
 
 
@@ -32,7 +33,9 @@ def test_runtime_ignore_does_not_hide_test_fixtures() -> None:
     ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
     assert "/runs/" in ignore
     assert "\nruns/" not in ignore
-    assert (ROOT / "tests" / "fixtures" / "runs" / "experiment-0002-freeze" / "manifest.json").is_file()
+    assert (
+        ROOT / "tests" / "fixtures" / "runs" / "experiment-0002-freeze" / "manifest.json"
+    ).is_file()
 
 
 def test_source_check_tolerates_ignored_build_metadata() -> None:
@@ -50,7 +53,5 @@ def test_source_check_tolerates_ignored_build_metadata() -> None:
         assert completed.returncode == 0, completed.stderr
     finally:
         marker.unlink(missing_ok=True)
-        try:
+        with suppress(OSError):
             egg_info.rmdir()
-        except OSError:
-            pass

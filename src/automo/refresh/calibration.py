@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
 
 
 @dataclass(frozen=True)
@@ -17,8 +17,13 @@ class AffineCalibrationModel:
 
 class AffineCalibrationCodec:
     id = "automo-affine-json-v1"
+
     def save(self, calibration: AffineCalibrationModel, path: Path) -> None:
-        path.write_text(json.dumps({"slope": calibration.slope, "intercept": calibration.intercept}), encoding="utf-8")
+        path.write_text(
+            json.dumps({"slope": calibration.slope, "intercept": calibration.intercept}),
+            encoding="utf-8",
+        )
+
     def load(self, path: Path) -> AffineCalibrationModel:
         raw = json.loads(path.read_text(encoding="utf-8"))
         return AffineCalibrationModel(float(raw["slope"]), float(raw["intercept"]))
@@ -36,5 +41,9 @@ class AffineCalibrator:
         mx = sum(x) / len(x)
         my = sum(y) / len(y)
         variance = sum((v - mx) ** 2 for v in x)
-        slope = 0.0 if variance == 0 else sum((a - mx) * (b - my) for a, b in zip(x, y)) / variance
+        slope = (
+            0.0
+            if variance == 0
+            else sum((a - mx) * (b - my) for a, b in zip(x, y, strict=True)) / variance
+        )
         return AffineCalibrationModel(slope=slope, intercept=my - slope * mx)

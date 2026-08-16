@@ -1,4 +1,5 @@
 """Deterministic findings and next-experiment proposal from immutable evidence."""
+
 from __future__ import annotations
 
 import hashlib
@@ -65,7 +66,9 @@ def propose_next_experiment(root: Path, run_id: str) -> FindingResult:
         hypothesis = "A predefined temporal stability protocol will determine whether the current candidate effect is reproducible."
         falsification = ["The candidate fails directional agreement across predefined folds."]
     else:
-        raise FindingError(f"unsupported decision outcome for next-experiment generation: {outcome!r}")
+        raise FindingError(
+            f"unsupported decision outcome for next-experiment generation: {outcome!r}"
+        )
 
     experiment_path = root / "research" / "experiments" / f"{next_id}.yaml"
     if experiment_path.exists():
@@ -91,8 +94,9 @@ def propose_next_experiment(root: Path, run_id: str) -> FindingResult:
         "baseline": source["baseline"],
         "candidate": candidate,
         "data": source["data"],
-        "capabilities": source.get("capabilities", []) + [
-            {"id": "CAPABILITY-TEMPORAL-STABILITY-0001", "kind": "evaluation-protocol"}
+        "capabilities": [
+            *source.get("capabilities", []),
+            {"id": "CAPABILITY-TEMPORAL-STABILITY-0001", "kind": "evaluation-protocol"},
         ],
         "split_spec": "SPLIT-PREDEFINED-TEMPORAL-FOLDS-0001",
         "evaluation_spec": "EVALUATION-TEMPORAL-STABILITY-0001",
@@ -102,7 +106,10 @@ def propose_next_experiment(root: Path, run_id: str) -> FindingResult:
 
     evidence = {
         "decision": {"path": "decision.json", "sha256": _sha256(decision_path)},
-        "feature_dispositions": {"path": "feature-dispositions.json", "sha256": _sha256(dispositions_path)},
+        "feature_dispositions": {
+            "path": "feature-dispositions.json",
+            "sha256": _sha256(dispositions_path),
+        },
     }
     findings = {
         "artifact_type": "automo.findings",
@@ -112,9 +119,21 @@ def propose_next_experiment(root: Path, run_id: str) -> FindingResult:
         "created_at": datetime.now(UTC).isoformat(),
         "diagnosis": diagnosis,
         "findings": [
-            {"id": "FINDING-0001", "kind": "experiment-decision", "statement": f"Experiment outcome was {outcome}."},
-            {"id": "FINDING-0002", "kind": "feature-usefulness", "statement": f"Retained={retained}; rejected={rejected}; inconclusive={inconclusive}."},
-            {"id": "FINDING-0003", "kind": "evidence-limit", "statement": "The local fixture is insufficient for promotion or broad search."},
+            {
+                "id": "FINDING-0001",
+                "kind": "experiment-decision",
+                "statement": f"Experiment outcome was {outcome}.",
+            },
+            {
+                "id": "FINDING-0002",
+                "kind": "feature-usefulness",
+                "statement": f"Retained={retained}; rejected={rejected}; inconclusive={inconclusive}.",
+            },
+            {
+                "id": "FINDING-0003",
+                "kind": "evidence-limit",
+                "statement": "The local fixture is insufficient for promotion or broad search.",
+            },
         ],
         "evidence": evidence,
         "next_experiment": {
@@ -128,7 +147,9 @@ def propose_next_experiment(root: Path, run_id: str) -> FindingResult:
     }
 
     experiment_path.write_text(yaml.safe_dump(next_spec, sort_keys=False), encoding="utf-8")
-    findings_path.write_text(json.dumps(findings, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    findings_path.write_text(
+        json.dumps(findings, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return FindingResult(run_id, findings_path, experiment_path, next_id)
 
 

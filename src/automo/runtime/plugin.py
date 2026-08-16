@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 import importlib
 import importlib.metadata
 import importlib.util
-import hashlib
 import sys
 import tomllib
+from collections.abc import Callable
+from contextlib import suppress
 from pathlib import Path
-from typing import Callable
 
 from .contracts import ResearchPlugin
 
@@ -66,10 +67,8 @@ def _load_import_path(declaration: str, root: Path) -> ResearchPlugin:
                 module = importlib.import_module(module_name)
             finally:
                 if inserted:
-                    try:
+                    with suppress(ValueError):
                         sys.path.remove(root_text)
-                    except ValueError:  # pragma: no cover
-                        pass
         factory = getattr(module, attribute)
     except (ImportError, AttributeError) as exc:
         raise PluginLoadError(f"cannot load project plugin {declaration!r}: {exc}") from exc
@@ -88,7 +87,9 @@ def _load_entrypoint(name: str) -> ResearchPlugin:
         )
     try:
         factory = matches[0].load()
-    except Exception as exc:  # pragma: no cover - delegated import failures are environment-specific
+    except (
+        Exception
+    ) as exc:  # pragma: no cover - delegated import failures are environment-specific
         raise PluginLoadError(f"cannot load entry point {name!r}: {exc}") from exc
     return _coerce_plugin(factory, f"entrypoint:{name}")
 

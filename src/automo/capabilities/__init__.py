@@ -18,11 +18,11 @@ from automo.capabilities.service import (
 __all__ = [
     "CapabilityAttemptResult",
     "CapabilityLifecycleError",
-    "create_getdone_handoff",
     "CapabilityRequest",
     "CapabilityResultStatus",
     "CapabilityScope",
     "WorkflowFulfillment",
+    "create_getdone_handoff",
     "fulfill_capability",
     "inspect_capability",
     "load_capability_request",

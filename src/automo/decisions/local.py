@@ -86,7 +86,11 @@ def _evaluate(
     missing = [f"validation.{key}" for key in required if key not in validation]
     missing.extend(f"out_of_sample.{key}" for key in required if key not in oos)
     if missing:
-        return DecisionOutcome.INVALID, ("required evidence fields are missing",), {"missing": missing}
+        return (
+            DecisionOutcome.INVALID,
+            ("required evidence fields are missing",),
+            {"missing": missing},
+        )
     try:
         val_n = int(validation["observations"])
         oos_n = int(oos["observations"])
@@ -95,8 +99,12 @@ def _evaluate(
     except (TypeError, ValueError):
         return DecisionOutcome.INVALID, ("metric evidence contains non-numeric values",), {}
     values = (
-        validation["baseline_mse"], validation["candidate_mse"], validation["candidate_delta"],
-        oos["baseline_mse"], oos["candidate_mse"], oos["candidate_delta"],
+        validation["baseline_mse"],
+        validation["candidate_mse"],
+        validation["candidate_delta"],
+        oos["baseline_mse"],
+        oos["candidate_mse"],
+        oos["candidate_delta"],
     )
     try:
         if any(not _finite(float(value)) for value in values):
@@ -114,8 +122,15 @@ def _evaluate(
         "out_of_sample_improvement": oos_improvement,
         "oos_degradation_from_validation": degradation,
     }
-    if val_n < policy.minimum_validation_observations or oos_n < policy.minimum_out_of_sample_observations:
-        return DecisionOutcome.INCONCLUSIVE, ("insufficient observations for the committed policy",), diagnostics
+    if (
+        val_n < policy.minimum_validation_observations
+        or oos_n < policy.minimum_out_of_sample_observations
+    ):
+        return (
+            DecisionOutcome.INCONCLUSIVE,
+            ("insufficient observations for the committed policy",),
+            diagnostics,
+        )
 
     directional_agreement = (val_improvement > 0) == (oos_improvement > 0)
     diagnostics["directional_agreement"] = directional_agreement

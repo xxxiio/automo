@@ -228,9 +228,26 @@ def test_precommit_combines_repository_hygiene_with_ruff_without_legacy_overlap(
         "pytest-tests",
     ):
         assert f"id: {hook}" in config
-    assert "--exit-non-zero-on-fix" in config
-    assert 'name: "unit tests"' in config
-    assert "entry: poetry run pytest -q" in config
+    ruff_repo = next(
+        repo
+        for repo in parsed["repos"]
+        if repo["repo"] == "https://github.com/astral-sh/ruff-pre-commit"
+    )
+    ruff_check = next(hook for hook in ruff_repo["hooks"] if hook["id"] == "ruff-check")
+    assert ruff_check["args"] == ["--fix", "--exit-non-zero-on-fix", "."]
+    assert ruff_check["pass_filenames"] is False
+    assert ruff_check["always_run"] is True
+    ruff_format = next(hook for hook in ruff_repo["hooks"] if hook["id"] == "ruff-format")
+    assert ruff_format["args"] == ["."]
+    assert ruff_format["pass_filenames"] is False
+    assert ruff_format["always_run"] is True
+    local_repo = next(repo for repo in parsed["repos"] if repo["repo"] == "local")
+    pytest_hook = next(hook for hook in local_repo["hooks"] if hook["id"] == "pytest-tests")
+    assert pytest_hook["name"] == "unit tests"
+    assert pytest_hook["entry"] == "poetry run pytest -q"
+    assert pytest_hook["language"] == "system"
+    assert pytest_hook["pass_filenames"] is False
+    assert pytest_hook["always_run"] is True
     for legacy in ("mirrors-isort", "ambv/black", "psf/black", "pycqa/flake8", "pyupgrade"):
         assert legacy not in config.lower()
 
@@ -287,11 +304,14 @@ def test_pytest_is_local_precommit_test_gate_and_ci_owns_version_matrix() -> Non
     assert not Path("tox.ini").exists()
     pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
     assert "tox = " not in pyproject
-    config = Path(".pre-commit-config.yaml").read_text(encoding="utf-8")
-    assert "id: pytest-tests" in config
-    assert "entry: poetry run pytest -q" in config
-    assert "pass_filenames: false" in config
-    assert "always_run: true" in config
+    import yaml
+
+    parsed = yaml.safe_load(Path(".pre-commit-config.yaml").read_text(encoding="utf-8"))
+    local_repo = next(repo for repo in parsed["repos"] if repo["repo"] == "local")
+    pytest_hook = next(hook for hook in local_repo["hooks"] if hook["id"] == "pytest-tests")
+    assert pytest_hook["entry"] == "poetry run pytest -q"
+    assert pytest_hook["pass_filenames"] is False
+    assert pytest_hook["always_run"] is True
     workflow = Path(".github/workflows/ci.yml").read_text(encoding="utf-8")
     assert 'python-version: ["3.11", "3.12", "3.13"]' in workflow
     assert "python-version: ${{ matrix.python-version }}" in workflow

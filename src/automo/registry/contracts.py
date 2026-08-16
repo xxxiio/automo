@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Mapping, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
+
+if TYPE_CHECKING:
+    from automo.runtime.contracts import FittedModel
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class ModelStatus(StrEnum):
@@ -182,6 +186,8 @@ class ModelRegistry(Protocol):
     def history(self, model_id: str) -> tuple[LifecycleEvent, ...]: ...
     def add_benchmark(self, observation: BenchmarkObservation) -> BenchmarkObservation: ...
     def benchmarks(self, model_id: str) -> tuple[BenchmarkObservation, ...]: ...
-    def register_calibration(self, base_model_id: str, calibration: Any, **kwargs: Any) -> CalibrationManifest: ...
+    def register_calibration(
+        self, base_model_id: str, calibration: Any, **kwargs: Any
+    ) -> CalibrationManifest: ...
     def calibrations(self, model_id: str) -> tuple[CalibrationManifest, ...]: ...
     def load_calibration(self, calibration_id: str) -> Any: ...

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from automo.persistence import read_json_artifact, write_json_artifact
 
-from .contracts import ModelPoolSnapshot, ModelPoolSpec, RefreshScoreCard
+from .contracts import ModelPoolSnapshot, RefreshScoreCard
 
 
 class PoolStoreError(RuntimeError):
@@ -23,13 +23,18 @@ class FilesystemPoolStore:
     def save_snapshot(self, snapshot: ModelPoolSnapshot) -> Path:
         path = self.snapshots / snapshot.pool_id / f"{snapshot.iteration_id}.json"
         if path.exists():
-            raise PoolStoreError(f"pool snapshot already exists: {snapshot.pool_id}/{snapshot.iteration_id}")
+            raise PoolStoreError(
+                f"pool snapshot already exists: {snapshot.pool_id}/{snapshot.iteration_id}"
+            )
         payload = asdict(snapshot)
         write_json_artifact(path, artifact_type="automo.model_pool_snapshot", payload=payload)
         return path
 
     def load_snapshot(self, pool_id: str, iteration_id: str) -> ModelPoolSnapshot:
-        raw = read_json_artifact(self.snapshots / pool_id / f"{iteration_id}.json", artifact_type="automo.model_pool_snapshot")
+        raw = read_json_artifact(
+            self.snapshots / pool_id / f"{iteration_id}.json",
+            artifact_type="automo.model_pool_snapshot",
+        )
         raw.pop("artifact_type", None)
         raw.pop("schema_version", None)
         raw["scorecards"] = tuple(RefreshScoreCard(**item) for item in raw.get("scorecards", []))

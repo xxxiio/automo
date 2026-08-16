@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml
 
@@ -13,7 +14,9 @@ class ArtifactError(RuntimeError):
     """Raised when a persisted Automo artifact cannot be decoded safely."""
 
 
-def _envelope(artifact_type: str, payload: Mapping[str, Any], schema_version: int) -> dict[str, Any]:
+def _envelope(
+    artifact_type: str, payload: Mapping[str, Any], schema_version: int
+) -> dict[str, Any]:
     if schema_version < 1:
         raise ValueError("schema_version must be positive")
     return {
@@ -48,7 +51,9 @@ def write_json_artifact(
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     document = _envelope(artifact_type, payload, schema_version)
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=path.parent, delete=False
+    ) as handle:
         json.dump(document, handle, indent=2, sort_keys=True, default=str)
         handle.write("\n")
         temp = Path(handle.name)
@@ -72,7 +77,9 @@ def write_yaml_artifact(
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     document = _envelope(artifact_type, payload, schema_version)
-    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=path.parent, delete=False
+    ) as handle:
         yaml.safe_dump(document, handle, sort_keys=False, allow_unicode=True)
         temp = Path(handle.name)
     os.replace(temp, path)

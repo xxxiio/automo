@@ -12,7 +12,13 @@ FIXTURE_RUNS = ROOT / "tests/fixtures/runs"
 
 def copy_project(tmp_path: Path) -> Path:
     root = tmp_path / "project"
-    shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(".pytest_cache", "__pycache__", "recommendations", "build", "dist", "*.egg-info"))
+    shutil.copytree(
+        ROOT,
+        root,
+        ignore=shutil.ignore_patterns(
+            ".pytest_cache", "__pycache__", "recommendations", "build", "dist", "*.egg-info"
+        ),
+    )
     shutil.copytree(FIXTURE_RUNS, root / "runs")
     return root
 
@@ -30,7 +36,9 @@ def test_promotes_when_every_gate_passes(tmp_path: Path) -> None:
 def test_retains_champion_when_operational_gate_fails(tmp_path: Path) -> None:
     root = copy_project(tmp_path)
     policy = root / "research/policies/POLICY-PROMOTION-0001.yaml"
-    policy.write_text(policy.read_text().replace("maximum_duration_ms: 50.0", "maximum_duration_ms: 0.0"))
+    policy.write_text(
+        policy.read_text().replace("maximum_duration_ms: 50.0", "maximum_duration_ms: 0.0")
+    )
     result = recommend_promotion(root)
     assert result.outcome is PromotionOutcome.RETAIN_CHAMPION
 

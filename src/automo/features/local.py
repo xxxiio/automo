@@ -47,7 +47,9 @@ def dispose_local_features(root: Path, run_id: str) -> FeatureDispositionResult:
     }
     missing = [name for name, path in paths.items() if not path.exists()]
     if missing:
-        raise FeatureDispositionError("required completed evidence is missing: " + ", ".join(missing))
+        raise FeatureDispositionError(
+            "required completed evidence is missing: " + ", ".join(missing)
+        )
 
     decision_hash_before = _sha256(paths["decision"])
     manifest = _read_mapping(paths["manifest"])
@@ -64,7 +66,9 @@ def dispose_local_features(root: Path, run_id: str) -> FeatureDispositionResult:
     try:
         policy = load_feature_disposition_policy(policy_path)
     except (OSError, ValueError) as exc:
-        raise FeatureDispositionError(f"invalid feature disposition policy: {policy_path}: {exc}") from exc
+        raise FeatureDispositionError(
+            f"invalid feature disposition policy: {policy_path}: {exc}"
+        ) from exc
     if len(feature_set.groups) > policy.maximum_feature_groups:
         raise FeatureDispositionError(
             "feature-group count exceeds the committed bounded-analysis policy"
@@ -72,9 +76,7 @@ def dispose_local_features(root: Path, run_id: str) -> FeatureDispositionResult:
 
     validation = _read_mapping(paths["validation"])
     oos = _read_mapping(paths["out_of_sample"])
-    dispositions = [
-        _dispose_group(group, policy, validation, oos) for group in feature_set.groups
-    ]
+    dispositions = [_dispose_group(group, policy, validation, oos) for group in feature_set.groups]
     payload: dict[str, object] = {
         "artifact_type": "automo.feature_disposition",
         "schema_version": 1,
@@ -105,7 +107,9 @@ def dispose_local_features(root: Path, run_id: str) -> FeatureDispositionResult:
         },
         "dispositions": dispositions,
     }
-    disposition_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    disposition_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     if _sha256(paths["decision"]) != decision_hash_before:
         disposition_path.unlink(missing_ok=True)
         raise FeatureDispositionError("feature analysis changed the immutable experiment decision")

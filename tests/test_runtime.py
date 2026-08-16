@@ -1,9 +1,20 @@
 from pathlib import Path
 
 from automo.runtime import (
-    CsvDataSource, EvaluationSpec, FeatureSetSpec, FeatureSpec, LambdaFeature,
-    MeanSquaredError, MetricDirection, MetricScope, MetricSpec, ModelSpec,
-    ObjectiveSpec, ResearchPlugin, ResearchRuntime, SingleFeatureLinearRunner,
+    CsvDataSource,
+    EvaluationSpec,
+    FeatureSetSpec,
+    FeatureSpec,
+    LambdaFeature,
+    MeanSquaredError,
+    MetricDirection,
+    MetricScope,
+    MetricSpec,
+    ModelSpec,
+    ObjectiveSpec,
+    ResearchPlugin,
+    ResearchRuntime,
+    SingleFeatureLinearRunner,
 )
 
 
@@ -18,13 +29,17 @@ def _plugin(path: Path) -> ResearchPlugin:
         feature_sets=(FeatureSetSpec("features", ("x2",)),),
         objectives=(ObjectiveSpec("regression", target="y"),),
         metrics=(mse,),
-        model_specs=(ModelSpec(
-            id="linear",
-            implementation="linear.single_feature",
-            feature_set="features",
-            objective=ObjectiveSpec("regression", target="y"),
-            evaluation=EvaluationSpec(MetricSpec("mse", MetricDirection.MINIMIZE, MetricScope.LOCAL)),
-        ),),
+        model_specs=(
+            ModelSpec(
+                id="linear",
+                implementation="linear.single_feature",
+                feature_set="features",
+                objective=ObjectiveSpec("regression", target="y"),
+                evaluation=EvaluationSpec(
+                    MetricSpec("mse", MetricDirection.MINIMIZE, MetricScope.LOCAL)
+                ),
+            ),
+        ),
         model_runners=(SingleFeatureLinearRunner(),),
     )
 

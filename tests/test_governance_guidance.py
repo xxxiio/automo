@@ -23,7 +23,8 @@ def test_milestone_lifecycle_and_plan_mode(tmp_path: Path) -> None:
     governance = ResearchGovernance(tmp_path)
     governance.initialise()
     item = governance.create_milestone(
-        "R001", question="Does the intervention improve the objective?",
+        "R001",
+        question="Does the intervention improve the objective?",
         why_next="Current evidence leaves this as the highest-value unresolved question.",
         exit_criteria=("candidate evaluated", "conclusion recorded"),
     )
@@ -32,7 +33,9 @@ def test_milestone_lifecycle_and_plan_mode(tmp_path: Path) -> None:
     for target in (MilestoneStatus.PLANNING, MilestoneStatus.APPROVED, MilestoneStatus.ACTIVE):
         item = governance.transition("R001", target)
     assert governance.require_execution_ready().id == "R001"
-    done = governance.conclude("R001", outcome=MilestoneOutcome.REJECTED, conclusion="No material improvement.")
+    done = governance.conclude(
+        "R001", outcome=MilestoneOutcome.REJECTED, conclusion="No material improvement."
+    )
     assert done.outcome == MilestoneOutcome.REJECTED
     assert governance.current_milestone() is None
 
@@ -67,19 +70,51 @@ def test_guidance_cli_paths_only() -> None:
 
 def test_milestone_cli_flow(tmp_path: Path) -> None:
     initialise_mr_project(tmp_path)
-    result = RUNNER.invoke(app, [
-        "research", "milestone-create", "R001", "--question", "Does A improve B?",
-        "--why-next", "It is the highest priority unresolved question.",
-        "--exit-criterion", "evaluate candidate", "--root", str(tmp_path),
-    ])
+    result = RUNNER.invoke(
+        app,
+        [
+            "research",
+            "milestone-create",
+            "R001",
+            "--question",
+            "Does A improve B?",
+            "--why-next",
+            "It is the highest priority unresolved question.",
+            "--exit-criterion",
+            "evaluate candidate",
+            "--root",
+            str(tmp_path),
+        ],
+    )
     assert result.exit_code == 0, result.output
     for state in ("planning", "approved", "active"):
-        result = RUNNER.invoke(app, ["research", "milestone-transition", "R001", "--status", state, "--root", str(tmp_path)])
+        result = RUNNER.invoke(
+            app,
+            [
+                "research",
+                "milestone-transition",
+                "R001",
+                "--status",
+                state,
+                "--root",
+                str(tmp_path),
+            ],
+        )
         assert result.exit_code == 0, result.output
-    result = RUNNER.invoke(app, [
-        "research", "milestone-conclude", "R001", "--outcome", "inconclusive",
-        "--conclusion", "Evidence was insufficient.", "--root", str(tmp_path),
-    ])
+    result = RUNNER.invoke(
+        app,
+        [
+            "research",
+            "milestone-conclude",
+            "R001",
+            "--outcome",
+            "inconclusive",
+            "--conclusion",
+            "Evidence was insufficient.",
+            "--root",
+            str(tmp_path),
+        ],
+    )
     assert result.exit_code == 0, result.output
 
 
@@ -102,7 +137,8 @@ acceptance: [tests pass]
 scope:
   allowed_paths: [src, tests]
   forbidden_paths: [.automo]
-""", encoding="utf-8"
+""",
+        encoding="utf-8",
     )
     result = RUNNER.invoke(app, ["capability", "handoff", "CAP-001", "--root", str(tmp_path)])
     assert result.exit_code == 0, result.output

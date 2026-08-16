@@ -16,9 +16,9 @@ from typing import Any
 from automo.contracts import ContractError, ExperimentSpec, load_experiment
 from automo.execution import run_temporal_stability
 from automo.execution.local import ExecutionError
-from automo.integrations.getdone import GetDoneCapabilityWorkflow
 from automo.governance import ResearchGovernance
 from automo.guidance import guidance_lock, validate_project_agent
+from automo.integrations.getdone import GetDoneCapabilityWorkflow
 from automo.project import ResearchProject
 from automo.runtime.plugin import PluginLoadError, load_project_plugin
 
@@ -93,22 +93,22 @@ def initialise_mr_project(root: Path) -> tuple[Path, ...]:
         Path("automo.toml"): '[project]\nplugin = "automo_project:create_plugin"\n',
         Path("automo_project.py"): (
             '"""Minimal Automo project plugin. Add data sources, features, models, and metrics here."""\n\n'
-            'from automo import ResearchPlugin\n\n\n'
-            'def create_plugin() -> ResearchPlugin:\n'
-            '    return ResearchPlugin(\n'
+            "from automo import ResearchPlugin\n\n\n"
+            "def create_plugin() -> ResearchPlugin:\n"
+            "    return ResearchPlugin(\n"
             '        id="my-project",\n'
-            '        data_sources=(),\n'
-            '        feature_computers=(),\n'
-            '        feature_sets=(),\n'
-            '        objectives=(),\n'
-            '        metrics=(),\n'
-            '        model_specs=(),\n'
-            '        model_runners=(),\n'
-            '    )\n'
+            "        data_sources=(),\n"
+            "        feature_computers=(),\n"
+            "        feature_sets=(),\n"
+            "        objectives=(),\n"
+            "        metrics=(),\n"
+            "        model_specs=(),\n"
+            "        model_runners=(),\n"
+            "    )\n"
         ),
         Path("README.md"): (
-            '# Automo project\n\n'
-            'Start by editing `automo_project.py`, then run `automo validate` and `automo doctor`.\n'
+            "# Automo project\n\n"
+            "Start by editing `automo_project.py`, then run `automo validate` and `automo doctor`.\n"
         ),
     }
     for relative, content in files.items():
@@ -131,7 +131,9 @@ def initialise_mr_project(root: Path) -> tuple[Path, ...]:
         created.append(agent_baseline.relative_to(root))
     agent_index = project_agent / "index.json"
     if not agent_index.exists():
-        agent_index.write_text('{\n  "schema_version": 1,\n  "infer": [],\n  "rules": []\n}\n', encoding="utf-8")
+        agent_index.write_text(
+            '{\n  "schema_version": 1,\n  "infer": [],\n  "rules": []\n}\n', encoding="utf-8"
+        )
         created.append(agent_index.relative_to(root))
     return tuple(created)
 
@@ -200,9 +202,17 @@ def doctor_checks(root: Path) -> tuple[DoctorCheck, ...]:
         except (ContractError, OSError, ValueError) as exc:
             checks.append(DoctorCheck("Research contracts", "fail", str(exc), blocking=True))
         else:
-            checks.append(DoctorCheck("Research contracts", "pass", f"{status.objective_id}; next={status.experiment_id}"))
+            checks.append(
+                DoctorCheck(
+                    "Research contracts",
+                    "pass",
+                    f"{status.objective_id}; next={status.experiment_id}",
+                )
+            )
     else:
-        checks.append(DoctorCheck("Research contracts", "optional", "no committed legacy experiment contract"))
+        checks.append(
+            DoctorCheck("Research contracts", "optional", "no committed legacy experiment contract")
+        )
     integration = GetDoneCapabilityWorkflow(enabled=False).status()
     checks.append(
         DoctorCheck(
@@ -260,9 +270,13 @@ def validate_project(root: Path) -> tuple[bool, tuple[str, ...], tuple[str, ...]
     if (root / ".project-agent" / "automo").is_dir():
         lock_status, _ = guidance_lock(root)
         if lock_status == "missing":
-            warnings.append("Automo guidance composition is not pinned; run automo guidance-lock --write after review")
+            warnings.append(
+                "Automo guidance composition is not pinned; run automo guidance-lock --write after review"
+            )
         elif lock_status != "current":
-            errors.append(f"Automo guidance composition is {lock_status}; review and rewrite the guidance lock")
+            errors.append(
+                f"Automo guidance composition is {lock_status}; review and rewrite the guidance lock"
+            )
 
     if (root / ".agent").is_dir():
         try:
@@ -351,7 +365,11 @@ def _experiment_state(
     root: Path, experiment: ExperimentSpec
 ) -> tuple[list[tuple[str, str]], str, str]:
     temporal_runs = []
-    for path in sorted((root / "runs").glob("*/temporal-stability.json")) if (root / "runs").is_dir() else ():
+    for path in (
+        sorted((root / "runs").glob("*/temporal-stability.json"))
+        if (root / "runs").is_dir()
+        else ()
+    ):
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):

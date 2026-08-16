@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from importlib import metadata, util
 from pathlib import Path
-from typing import Callable
 
 from automo.capabilities.contracts import CapabilityRequest, CapabilityResultStatus
 from automo.capabilities.service import WorkflowFulfillment

@@ -1,4 +1,5 @@
 """Non-deploying champion/challenger promotion recommendations."""
+
 from __future__ import annotations
 
 import hashlib
@@ -28,11 +29,15 @@ class PromotionResult:
     reasons: tuple[str, ...]
 
 
-def recommend_promotion(root: Path, *, recommendation_id: str = "promotion-0001") -> PromotionResult:
+def recommend_promotion(
+    root: Path, *, recommendation_id: str = "promotion-0001"
+) -> PromotionResult:
     root = root.resolve()
     output_dir = root / "recommendations" / recommendation_id
     if output_dir.exists():
-        raise PromotionError(f"recommendation directory already exists and is immutable: {output_dir}")
+        raise PromotionError(
+            f"recommendation directory already exists and is immutable: {output_dir}"
+        )
     decision_path = root / "runs/experiment-0003-decision/decision.json"
     temporal_path = root / "runs/experiment-0006-temporal/temporal-stability.json"
     manifest_path = root / "runs/experiment-0003-decision/manifest.json"
@@ -68,7 +73,9 @@ def recommend_promotion(root: Path, *, recommendation_id: str = "promotion-0001"
     fraction = improved / folds if folds else 0.0
     if fraction < float(policy["minimum_temporal_improved_fraction"]):
         failures.append("temporal improved-fold fraction missed the committed gate")
-    if bool(policy["require_temporal_directional_agreement"]) and not bool(temporal["aggregate"]["directional_agreement"]):
+    if bool(policy["require_temporal_directional_agreement"]) and not bool(
+        temporal["aggregate"]["directional_agreement"]
+    ):
         failures.append("temporal directions disagree")
     if duration_ms > float(policy["maximum_duration_ms"]):
         failures.append("latency exceeded the committed gate")
@@ -76,7 +83,9 @@ def recommend_promotion(root: Path, *, recommendation_id: str = "promotion-0001"
         failures.append("cost exceeded the committed gate")
 
     outcome = PromotionOutcome.RETAIN_CHAMPION if failures else PromotionOutcome.PROMOTE_CHALLENGER
-    reasons = tuple(failures or ["all committed quality, stability, latency, and cost gates passed"])
+    reasons = tuple(
+        failures or ["all committed quality, stability, latency, and cost gates passed"]
+    )
     output_dir.mkdir(parents=True)
     payload = {
         "artifact_type": "automo.promotion_recommendation",
@@ -100,7 +109,9 @@ def recommend_promotion(root: Path, *, recommendation_id: str = "promotion-0001"
         "prior_evidence_rewritten": False,
     }
     recommendation_path = output_dir / "recommendation.json"
-    recommendation_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    recommendation_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return PromotionResult(recommendation_path, outcome, reasons)
 
 

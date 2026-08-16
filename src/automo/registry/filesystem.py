@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Iterable
 from dataclasses import fields
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from automo.persistence import read_yaml_artifact, write_yaml_artifact
 
@@ -40,6 +41,7 @@ def _read_yaml(path: Path, *, artifact_type: str) -> dict[str, Any]:
 def _atomic_yaml(path: Path, payload: dict[str, Any], *, artifact_type: str) -> None:
     write_yaml_artifact(path, artifact_type=artifact_type, payload=payload)
 
+
 def _next_id(paths: Iterable[Path], prefix: str) -> str:
     largest = 0
     for path in paths:
@@ -74,7 +76,12 @@ class FilesystemModelRegistry:
         self.events_root = root / "events"
         self.codecs = {codec.id: codec for codec in codecs}
         self.calibration_codecs = {codec.id: codec for codec in calibration_codecs}
-        for path in (self.models_root, self.calibrations_root, self.benchmarks_root, self.events_root):
+        for path in (
+            self.models_root,
+            self.calibrations_root,
+            self.benchmarks_root,
+            self.events_root,
+        ):
             path.mkdir(parents=True, exist_ok=True)
 
     def register_codec(self, codec: ModelArtifactCodec) -> None:
@@ -104,7 +111,9 @@ class FilesystemModelRegistry:
         try:
             codec.save(model, artifact_path)
             provenance_path = model_dir / "provenance.yaml"
-            _atomic_yaml(provenance_path, provenance.as_dict(), artifact_type="automo.training_provenance")
+            _atomic_yaml(
+                provenance_path, provenance.as_dict(), artifact_type="automo.training_provenance"
+            )
             manifest = ModelManifest(
                 id=model_id,
                 implementation=implementation,
@@ -117,12 +126,17 @@ class FilesystemModelRegistry:
                 provenance_path=str(provenance_path.relative_to(self.root)),
                 parent_model_id=parent_model_id,
             )
-            _atomic_yaml(model_dir / "manifest.yaml", manifest.as_dict(), artifact_type="automo.model_manifest")
+            _atomic_yaml(
+                model_dir / "manifest.yaml",
+                manifest.as_dict(),
+                artifact_type="automo.model_manifest",
+            )
             self.codecs[codec.id] = codec
             self._write_initial_event(model_id)
             return manifest
         except Exception:
             import shutil
+
             shutil.rmtree(model_dir, ignore_errors=True)
             raise
 
@@ -136,24 +150,35 @@ class FilesystemModelRegistry:
             to_status=ModelStatus.CANDIDATE,
             reason="model registered",
         )
-        _atomic_yaml(event_dir / f"{event.id}.yaml", event.as_dict(), artifact_type="automo.lifecycle_event")
+        _atomic_yaml(
+            event_dir / f"{event.id}.yaml", event.as_dict(), artifact_type="automo.lifecycle_event"
+        )
 
     def get_manifest(self, model_id: str) -> ModelManifest:
         path = self.models_root / model_id / "manifest.yaml"
         if not path.is_file():
             raise RegistryError(f"unknown model: {model_id}")
-        return _dataclass_from_mapping(ModelManifest, _read_yaml(path, artifact_type="automo.model_manifest"))
+        return _dataclass_from_mapping(
+            ModelManifest, _read_yaml(path, artifact_type="automo.model_manifest")
+        )
 
     def get_provenance(self, model_id: str) -> TrainingProvenance:
         manifest = self.get_manifest(model_id)
-        return _dataclass_from_mapping(TrainingProvenance, _read_yaml(self.root / manifest.provenance_path, artifact_type="automo.training_provenance"))
+        return _dataclass_from_mapping(
+            TrainingProvenance,
+            _read_yaml(
+                self.root / manifest.provenance_path, artifact_type="automo.training_provenance"
+            ),
+        )
 
     def load_model(self, model_id: str) -> Any:
         manifest = self.get_manifest(model_id)
         try:
             codec = self.codecs[manifest.artifact_codec]
         except KeyError as exc:
-            raise RegistryError(f"artifact codec is not registered: {manifest.artifact_codec}") from exc
+            raise RegistryError(
+                f"artifact codec is not registered: {manifest.artifact_codec}"
+            ) from exc
         path = self.root / manifest.artifact_path
         if _sha256(path) != manifest.artifact_hash:
             raise RegistryError(f"model artifact hash mismatch: {model_id}")
@@ -178,7 +203,9 @@ class FilesystemModelRegistry:
             to_status=target,
             reason=reason,
         )
-        _atomic_yaml(event_dir / f"{event.id}.yaml", event.as_dict(), artifact_type="automo.lifecycle_event")
+        _atomic_yaml(
+            event_dir / f"{event.id}.yaml", event.as_dict(), artifact_type="automo.lifecycle_event"
+        )
         return event
 
     def history(self, model_id: str) -> tuple[LifecycleEvent, ...]:
@@ -199,7 +226,11 @@ class FilesystemModelRegistry:
         model_root.mkdir(parents=True, exist_ok=True)
         if (model_root / f"{observation.id}.yaml").exists():
             raise RegistryError(f"benchmark already exists: {observation.id}")
-        _atomic_yaml(model_root / f"{observation.id}.yaml", observation.as_dict(), artifact_type="automo.benchmark_observation")
+        _atomic_yaml(
+            model_root / f"{observation.id}.yaml",
+            observation.as_dict(),
+            artifact_type="automo.benchmark_observation",
+        )
         return observation
 
     def append_benchmark(
@@ -277,24 +308,32 @@ class FilesystemModelRegistry:
                 window_start=window_start,
                 window_end=window_end,
             )
-            _atomic_yaml(directory / "manifest.yaml", manifest.as_dict(), artifact_type="automo.calibration_manifest")
+            _atomic_yaml(
+                directory / "manifest.yaml",
+                manifest.as_dict(),
+                artifact_type="automo.calibration_manifest",
+            )
             self.calibration_codecs[codec.id] = codec
             return manifest
         except Exception:
             import shutil
+
             shutil.rmtree(directory, ignore_errors=True)
             raise
-
 
     def load_calibration(self, calibration_id: str) -> Any:
         path = self.calibrations_root / calibration_id / "manifest.yaml"
         if not path.is_file():
             raise RegistryError(f"unknown calibration: {calibration_id}")
-        manifest = _dataclass_from_mapping(CalibrationManifest, _read_yaml(path, artifact_type="automo.calibration_manifest"))
+        manifest = _dataclass_from_mapping(
+            CalibrationManifest, _read_yaml(path, artifact_type="automo.calibration_manifest")
+        )
         try:
             codec = self.calibration_codecs[manifest.artifact_codec]
         except KeyError as exc:
-            raise RegistryError(f"calibration codec is not registered: {manifest.artifact_codec}") from exc
+            raise RegistryError(
+                f"calibration codec is not registered: {manifest.artifact_codec}"
+            ) from exc
         artifact = self.root / manifest.artifact_path
         if _sha256(artifact) != manifest.artifact_hash:
             raise RegistryError(f"calibration artifact hash mismatch: {calibration_id}")

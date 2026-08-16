@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Mapping, Protocol, Sequence
+from typing import Any, Protocol
 
-from automo.runtime.contracts import DataSnapshot, MetricDirection, ModelSpec
+from automo.runtime.contracts import DataSnapshot, MetricDirection
 
 
 class RefreshError(RuntimeError):
@@ -24,13 +25,18 @@ class EvaluationPartitions:
     test: DataPartition
 
     def __post_init__(self) -> None:
-        groups = (set(self.fit.row_indices), set(self.validation.row_indices), set(self.test.row_indices))
+        groups = (
+            set(self.fit.row_indices),
+            set(self.validation.row_indices),
+            set(self.test.row_indices),
+        )
         if groups[0] & groups[1] or groups[0] & groups[2] or groups[1] & groups[2]:
             raise ValueError("fit, validation and test partitions must be disjoint")
 
 
 class SplitStrategy(Protocol):
     id: str
+
     def split(self, snapshot: DataSnapshot) -> EvaluationPartitions: ...
 
 
@@ -84,8 +90,9 @@ class SelectionPolicy:
 
 class ModelSelector(Protocol):
     id: str
+
     def select(
-        self, pool: "ModelPoolSpec", snapshot: "ModelPoolSnapshot", *, context: Mapping[str, Any]
+        self, pool: ModelPoolSpec, snapshot: ModelPoolSnapshot, *, context: Mapping[str, Any]
     ) -> tuple[str, ...]: ...
 
 
@@ -104,7 +111,11 @@ class ModelPoolSpec:
 
     @property
     def resolved_model_spec_ids(self) -> tuple[str, ...]:
-        values = tuple(dict.fromkeys((*(self.model_spec_ids), *((self.model_spec_id,) if self.model_spec_id else ()))))
+        values = tuple(
+            dict.fromkeys(
+                (*(self.model_spec_ids), *((self.model_spec_id,) if self.model_spec_id else ()))
+            )
+        )
         if not values:
             raise ValueError("model pool requires at least one model spec id")
         return values
@@ -113,7 +124,10 @@ class ModelPoolSpec:
 class StructuredCalibrator(Protocol):
     id: str
     artifact_codec: Any
-    def fit_outputs(self, outputs: Any, target: Sequence[Any], *, context: Mapping[str, Any]) -> Any: ...
+
+    def fit_outputs(
+        self, outputs: Any, target: Sequence[Any], *, context: Mapping[str, Any]
+    ) -> Any: ...
 
 
 class RefreshAction(StrEnum):
@@ -160,4 +174,5 @@ class CalibratorModel(Protocol):
 class Calibrator(Protocol):
     id: str
     artifact_codec: Any
+
     def fit(self, prediction: Sequence[float], target: Sequence[float]) -> CalibratorModel: ...

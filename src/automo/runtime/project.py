@@ -1,14 +1,19 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import platform
 import subprocess
+from dataclasses import dataclass
 from typing import Any
 
-from .contracts import (
-    EvaluationContext, ModelOutputBatch, PredictionRequest, ResearchPlugin, TrainingRequest,
-)
 from automo.registry import ModelRegistry, TrainingProvenance
+
+from .contracts import (
+    EvaluationContext,
+    ModelOutputBatch,
+    PredictionRequest,
+    ResearchPlugin,
+    TrainingRequest,
+)
 from .features import FeatureEngine
 from .graph import LegacyTrainerAdapter
 
@@ -33,7 +38,6 @@ class ResearchRuntime:
         self.model_graphs = self._unique(self.plugin.model_graphs, "model graph")
         self.features = FeatureEngine(self.plugin.feature_computers)
 
-
     def trainer_for(self, implementation: str):
         if implementation in self.model_trainers:
             return self.model_trainers[implementation]
@@ -44,9 +48,12 @@ class ResearchRuntime:
     def prepare_inputs(self, spec, rows):
         resolved = {}
         for inp in spec.resolved_inputs():
-            from .contracts import FeatureSetInput, DataInput, ModelOutputInput
+            from .contracts import DataInput, FeatureSetInput, ModelOutputInput
+
             if isinstance(inp, FeatureSetInput):
-                resolved[inp.alias] = self.features.materialize(rows, self.feature_sets[inp.feature_set_id])
+                resolved[inp.alias] = self.features.materialize(
+                    rows, self.feature_sets[inp.feature_set_id]
+                )
             elif isinstance(inp, DataInput):
                 resolved[inp.alias] = tuple(rows)
             elif isinstance(inp, ModelOutputInput):
@@ -99,7 +106,6 @@ class ResearchRuntime:
         )
         return result.predictor
 
-
     def fit_and_register(
         self,
         model_id: str,
@@ -121,24 +127,38 @@ class ResearchRuntime:
             )
         result = trainer.fit(
             TrainingRequest(
-                model_spec=spec, rows=snapshot.rows,
-                inputs=self.prepare_inputs(spec, snapshot.rows), objective=spec.objective,
-                services=self.plugin.services, seed=seed, partition_id="fit",
+                model_spec=spec,
+                rows=snapshot.rows,
+                inputs=self.prepare_inputs(spec, snapshot.rows),
+                objective=spec.objective,
+                services=self.plugin.services,
+                seed=seed,
+                partition_id="fit",
             )
         )
         feature_set_id = spec.feature_set
         provenance = TrainingProvenance(
-            data_source_id=data_source_id, data_snapshot_id=snapshot.id,
-            data_snapshot_hash=snapshot.content_hash, feature_set_id=feature_set_id,
-            model_spec_id=spec.id, objective_id=spec.objective.id,
-            runner_implementation=spec.implementation, python_version=platform.python_version(),
-            seed=seed, code_revision=self._git_revision(),
+            data_source_id=data_source_id,
+            data_snapshot_id=snapshot.id,
+            data_snapshot_hash=snapshot.content_hash,
+            feature_set_id=feature_set_id,
+            model_spec_id=spec.id,
+            objective_id=spec.objective.id,
+            runner_implementation=spec.implementation,
+            python_version=platform.python_version(),
+            seed=seed,
+            code_revision=self._git_revision(),
         )
         registry_model = result.artifacts.get("registry_model", result.predictor)
         return registry.register_model(
-            registry_model, implementation=spec.implementation, model_spec_id=spec.id,
-            objective_id=spec.objective.id, feature_set_id=feature_set_id, provenance=provenance,
-            codec=codec, model_id=registered_model_id,
+            registry_model,
+            implementation=spec.implementation,
+            model_spec_id=spec.id,
+            objective_id=spec.objective.id,
+            feature_set_id=feature_set_id,
+            provenance=provenance,
+            codec=codec,
+            model_id=registered_model_id,
         )
 
     def evaluate_and_record(
@@ -154,7 +174,9 @@ class ResearchRuntime:
         spec = self.model_specs[model_id]
         snapshot = self.data_sources[data_source_id].snapshot()
         metrics = self.evaluate(model_id, model, data_source_id=data_source_id)
-        metric_specs = {item.id: item for item in (spec.evaluation.primary, *spec.evaluation.secondary)}
+        metric_specs = {
+            item.id: item for item in (spec.evaluation.primary, *spec.evaluation.secondary)
+        }
         for metric_id, value in metrics.items():
             contract = metric_specs[metric_id]
             registry.append_benchmark(
@@ -184,8 +206,11 @@ class ResearchRuntime:
         snapshot = self.data_sources[data_source_id].snapshot()
         inputs = self.prepare_inputs(spec, snapshot.rows)
         request = PredictionRequest(
-            model_spec=spec, rows=snapshot.rows, inputs=inputs,
-            services=self.plugin.services, partition_id="evaluation",
+            model_spec=spec,
+            rows=snapshot.rows,
+            inputs=inputs,
+            services=self.plugin.services,
+            partition_id="evaluation",
         )
         if hasattr(model, "predict"):
             try:
@@ -198,8 +223,12 @@ class ResearchRuntime:
         if not isinstance(output, ModelOutputBatch):
             output = ModelOutputBatch(tuple(output))
         context = EvaluationContext(
-            model_spec=spec, rows=snapshot.rows, outputs=output, objective=spec.objective,
-            inputs=inputs, services=self.plugin.services, partition_id="evaluation",
+            model_spec=spec,
+            rows=snapshot.rows,
+            outputs=output,
+            objective=spec.objective,
+            inputs=inputs,
+            services=self.plugin.services,
+            partition_id="evaluation",
         )
         return self.evaluate_context(spec, context)
-

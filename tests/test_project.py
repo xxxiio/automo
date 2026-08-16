@@ -2,7 +2,6 @@ from pathlib import Path
 
 from automo.project import ResearchProject
 
-
 ROOT = Path(__file__).parents[1]
 
 

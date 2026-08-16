@@ -4,7 +4,6 @@ import pytest
 
 from automo.contracts import ContractError, ExperimentStatus, load_experiment
 
-
 ROOT = Path(__file__).parents[1]
 
 

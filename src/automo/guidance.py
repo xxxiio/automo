@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+import fnmatch
+import json
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from hashlib import sha256
 from importlib.resources import files
-import fnmatch
-import json
 from pathlib import Path, PurePosixPath
-from typing import Iterable, Sequence
 
 
 class GuidanceError(RuntimeError):
@@ -22,15 +22,69 @@ _CORE = (
     "acceptance/core.md",
 )
 _TASKS = {
-    "milestone-planning": ("workflows/milestone-planning.md", "policies/bounded-search.md", "policies/multiple-testing.md", "policies/early-stopping.md"),
-    "experiment-design": ("workflows/experiment-design.md", "standards/leakage.md", "policies/sealed-oos.md", "policies/multiple-testing.md", "policies/early-stopping.md", "acceptance/candidate-admission.md", "acceptance/agent-adherence.md"),
-    "model-diagnosis": ("workflows/model-diagnosis.md", "standards/diagnosis.md", "references/diagnosis-patterns.md", "references/intervention-decision-table.md", "standards/model-comparison.md"),
-    "feature-research": ("workflows/feature-research.md", "policies/bounded-search.md", "policies/multiple-testing.md", "acceptance/candidate-admission.md", "acceptance/agent-adherence.md"),
-    "calibration-research": ("workflows/calibration-research.md", "standards/model-comparison.md", "policies/sealed-oos.md", "policies/multiple-testing.md", "acceptance/agent-adherence.md"),
-    "meta-model-research": ("workflows/meta-model-research.md", "standards/leakage.md", "policies/sealed-oos.md", "policies/multiple-testing.md", "references/meta-model-patterns.md", "acceptance/agent-adherence.md"),
-    "refresh-analysis": ("workflows/refresh-analysis.md", "standards/diagnosis.md", "references/diagnosis-patterns.md", "references/intervention-decision-table.md", "standards/model-comparison.md"),
-    "milestone-conclusion": ("workflows/milestone-conclusion.md", "policies/multiple-testing.md", "policies/early-stopping.md", "acceptance/research-completion.md", "acceptance/agent-adherence.md"),
-    "capability-handoff": ("workflows/capability-handoff.md", "policies/capability-escalation.md", "contracts/getdone-handoff.md"),
+    "milestone-planning": (
+        "workflows/milestone-planning.md",
+        "policies/bounded-search.md",
+        "policies/multiple-testing.md",
+        "policies/early-stopping.md",
+    ),
+    "experiment-design": (
+        "workflows/experiment-design.md",
+        "standards/leakage.md",
+        "policies/sealed-oos.md",
+        "policies/multiple-testing.md",
+        "policies/early-stopping.md",
+        "acceptance/candidate-admission.md",
+        "acceptance/agent-adherence.md",
+    ),
+    "model-diagnosis": (
+        "workflows/model-diagnosis.md",
+        "standards/diagnosis.md",
+        "references/diagnosis-patterns.md",
+        "references/intervention-decision-table.md",
+        "standards/model-comparison.md",
+    ),
+    "feature-research": (
+        "workflows/feature-research.md",
+        "policies/bounded-search.md",
+        "policies/multiple-testing.md",
+        "acceptance/candidate-admission.md",
+        "acceptance/agent-adherence.md",
+    ),
+    "calibration-research": (
+        "workflows/calibration-research.md",
+        "standards/model-comparison.md",
+        "policies/sealed-oos.md",
+        "policies/multiple-testing.md",
+        "acceptance/agent-adherence.md",
+    ),
+    "meta-model-research": (
+        "workflows/meta-model-research.md",
+        "standards/leakage.md",
+        "policies/sealed-oos.md",
+        "policies/multiple-testing.md",
+        "references/meta-model-patterns.md",
+        "acceptance/agent-adherence.md",
+    ),
+    "refresh-analysis": (
+        "workflows/refresh-analysis.md",
+        "standards/diagnosis.md",
+        "references/diagnosis-patterns.md",
+        "references/intervention-decision-table.md",
+        "standards/model-comparison.md",
+    ),
+    "milestone-conclusion": (
+        "workflows/milestone-conclusion.md",
+        "policies/multiple-testing.md",
+        "policies/early-stopping.md",
+        "acceptance/research-completion.md",
+        "acceptance/agent-adherence.md",
+    ),
+    "capability-handoff": (
+        "workflows/capability-handoff.md",
+        "policies/capability-escalation.md",
+        "contracts/getdone-handoff.md",
+    ),
 }
 _MAX_SELECTED_DOCUMENTS = 16
 _REQUIRED_TASK_DOCUMENTS = {key: (values[0],) for key, values in _TASKS.items()}
@@ -56,7 +110,9 @@ def _safe_project_path(value: str) -> PurePosixPath:
     return candidate
 
 
-def _load_project_agent(root: Path, concerns: Sequence[str], changed_paths: Sequence[str] = ()) -> tuple[GuidanceDocument, ...]:
+def _load_project_agent(
+    root: Path, concerns: Sequence[str], changed_paths: Sequence[str] = ()
+) -> tuple[GuidanceDocument, ...]:
     base = root / ".project-agent" / "automo"
     index_path = base / "index.json"
     if not index_path.is_file():
@@ -66,12 +122,20 @@ def _load_project_agent(root: Path, concerns: Sequence[str], changed_paths: Sequ
     except (OSError, json.JSONDecodeError) as exc:
         raise GuidanceError(f"cannot read .project-agent/automo/index.json: {exc}") from exc
     if not isinstance(index, dict) or index.get("schema_version") != _PROJECT_AGENT_SCHEMA_VERSION:
-        raise GuidanceError(f"unsupported .project-agent/automo index schema; expected {_PROJECT_AGENT_SCHEMA_VERSION}")
+        raise GuidanceError(
+            f"unsupported .project-agent/automo index schema; expected {_PROJECT_AGENT_SCHEMA_VERSION}"
+        )
     selected: list[GuidanceDocument] = []
     baseline = base / "AGENTS.md"
     if not baseline.is_file():
-        raise GuidanceError(".project-agent/automo/AGENTS.md is required when .project-agent/automo exists")
-    selected.append(GuidanceDocument(".project-agent/automo/AGENTS.md", baseline.read_text(encoding="utf-8"), "project-agent"))
+        raise GuidanceError(
+            ".project-agent/automo/AGENTS.md is required when .project-agent/automo exists"
+        )
+    selected.append(
+        GuidanceDocument(
+            ".project-agent/automo/AGENTS.md", baseline.read_text(encoding="utf-8"), "project-agent"
+        )
+    )
     requested = set(concerns)
     inferred: set[str] = set()
     infer = index.get("infer", [])
@@ -84,9 +148,19 @@ def _load_project_agent(root: Path, concerns: Sequence[str], changed_paths: Sequ
         inferred_concerns = item.get("concerns", [])
         if not isinstance(patterns, list) or not all(isinstance(x, str) and x for x in patterns):
             raise GuidanceError(f".project-agent infer[{position}].paths must be non-empty strings")
-        if not isinstance(inferred_concerns, list) or not all(isinstance(x, str) and x for x in inferred_concerns):
-            raise GuidanceError(f".project-agent infer[{position}].concerns must be non-empty strings")
-        if any(any(fnmatch.fnmatch(path.replace("\\", "/").removeprefix("./"), pattern) for pattern in patterns) for path in changed_paths):
+        if not isinstance(inferred_concerns, list) or not all(
+            isinstance(x, str) and x for x in inferred_concerns
+        ):
+            raise GuidanceError(
+                f".project-agent infer[{position}].concerns must be non-empty strings"
+            )
+        if any(
+            any(
+                fnmatch.fnmatch(path.replace("\\", "/").removeprefix("./"), pattern)
+                for pattern in patterns
+            )
+            for path in changed_paths
+        ):
             inferred.update(inferred_concerns)
     requested.update(inferred)
     rules = index.get("rules", [])
@@ -106,13 +180,23 @@ def _load_project_agent(root: Path, concerns: Sequence[str], changed_paths: Sequ
         rule_concerns = rule.get("concerns", [])
         rule_paths = rule.get("paths", [])
         loads = rule.get("load", [])
-        if not isinstance(rule_concerns, list) or not all(isinstance(x, str) and x for x in rule_concerns):
+        if not isinstance(rule_concerns, list) or not all(
+            isinstance(x, str) and x for x in rule_concerns
+        ):
             raise GuidanceError(".project-agent rule concerns must be strings")
-        if not isinstance(rule_paths, list) or not all(isinstance(x, str) and x for x in rule_paths):
+        if not isinstance(rule_paths, list) or not all(
+            isinstance(x, str) and x for x in rule_paths
+        ):
             raise GuidanceError(".project-agent rule paths must be strings")
         if not rule_concerns and not rule_paths:
             raise GuidanceError(f".project-agent rule {rule_id} needs concerns or paths")
-        path_match = any(any(fnmatch.fnmatch(path.replace("\\", "/").removeprefix("./"), pattern) for pattern in rule_paths) for path in changed_paths)
+        path_match = any(
+            any(
+                fnmatch.fnmatch(path.replace("\\", "/").removeprefix("./"), pattern)
+                for pattern in rule_paths
+            )
+            for path in changed_paths
+        )
         if not requested.intersection(rule_concerns) and not path_match:
             continue
         if not isinstance(loads, list) or not all(isinstance(x, str) for x in loads):
@@ -124,46 +208,69 @@ def _load_project_agent(root: Path, concerns: Sequence[str], changed_paths: Sequ
                 resolved = path.resolve()
                 resolved.relative_to(base.resolve())
             except ValueError as exc:
-                raise GuidanceError(f"project-agent guidance escapes project directory: {raw}") from exc
+                raise GuidanceError(
+                    f"project-agent guidance escapes project directory: {raw}"
+                ) from exc
             if not path.is_file():
                 raise GuidanceError(f"project-agent guidance file is missing: {raw}")
             display = f".project-agent/automo/{rel.as_posix()}"
             if display in seen_paths:
                 continue
             seen_paths.add(display)
-            selected.append(GuidanceDocument(display, path.read_text(encoding="utf-8"), "project-agent"))
+            selected.append(
+                GuidanceDocument(display, path.read_text(encoding="utf-8"), "project-agent")
+            )
     return tuple(selected)
 
 
 def select_guidance(
-    task_class: str, *, project_root: Path | None = None, concerns: Sequence[str] = (), changed_paths: Sequence[str] = (), use_project_agent: bool = True
+    task_class: str,
+    *,
+    project_root: Path | None = None,
+    concerns: Sequence[str] = (),
+    changed_paths: Sequence[str] = (),
+    use_project_agent: bool = True,
 ) -> tuple[GuidanceDocument, ...]:
     if task_class not in _TASKS:
         expected = ", ".join(_TASKS)
-        raise GuidanceError(f"unknown research task class: {task_class}; expected one of {expected}")
+        raise GuidanceError(
+            f"unknown research task class: {task_class}; expected one of {expected}"
+        )
     paths: list[str] = []
     for path in (*_CORE, *_TASKS[task_class]):
         if path not in paths:
             paths.append(path)
     root = files("automo.skill")
-    docs = [GuidanceDocument(path, root.joinpath(path).read_text(encoding="utf-8")) for path in paths]
+    docs = [
+        GuidanceDocument(path, root.joinpath(path).read_text(encoding="utf-8")) for path in paths
+    ]
     if use_project_agent and project_root is not None:
         project_concerns = (task_class, *concerns)
         docs.extend(_load_project_agent(project_root.resolve(), project_concerns, changed_paths))
     if len(docs) > _MAX_SELECTED_DOCUMENTS:
-        raise GuidanceError(f"guidance selection has {len(docs)} documents; maximum is {_MAX_SELECTED_DOCUMENTS}")
+        raise GuidanceError(
+            f"guidance selection has {len(docs)} documents; maximum is {_MAX_SELECTED_DOCUMENTS}"
+        )
     return tuple(docs)
 
 
-def render_guidance(documents: Iterable[GuidanceDocument], *, paths_only: bool = False, explain: bool = False) -> str:
+def render_guidance(
+    documents: Iterable[GuidanceDocument], *, paths_only: bool = False, explain: bool = False
+) -> str:
     docs = tuple(documents)
     if paths_only:
         return "\n".join(doc.path for doc in docs) + "\n"
     chunks = []
     if explain:
-        chunks.append("# Automo guidance composition\n" + "\n".join(f"- [{doc.source}] {doc.path}" for doc in docs) + "\n")
+        chunks.append(
+            "# Automo guidance composition\n"
+            + "\n".join(f"- [{doc.source}] {doc.path}" for doc in docs)
+            + "\n"
+        )
     for doc in docs:
-        chunks.append(f"<!-- automo-guidance: {doc.source}:{doc.path} -->\n{doc.content.rstrip()}\n")
+        chunks.append(
+            f"<!-- automo-guidance: {doc.source}:{doc.path} -->\n{doc.content.rstrip()}\n"
+        )
     return "\n".join(chunks)
 
 
@@ -178,7 +285,6 @@ def _digest_entries(entries: Sequence[tuple[str, bytes]]) -> str:
 
 
 def guidance_composition(root: Path) -> dict[str, object]:
-    builtin_root = files("automo.skill")
     builtin_entries: list[tuple[str, bytes]] = []
     for task in task_classes():
         for doc in select_guidance(task, use_project_agent=False):
@@ -191,9 +297,12 @@ def guidance_composition(root: Path) -> dict[str, object]:
             if path.is_file():
                 project_entries.append((path.relative_to(root).as_posix(), path.read_bytes()))
     from automo import __version__
+
     builtin_digest = _digest_entries(builtin_entries)
     project_digest = _digest_entries(project_entries) if project_entries else None
-    composition_digest = _digest_entries([("builtin", builtin_digest.encode()), ("project-agent", (project_digest or "").encode())])
+    composition_digest = _digest_entries(
+        [("builtin", builtin_digest.encode()), ("project-agent", (project_digest or "").encode())]
+    )
     return {
         "artifact_type": "automo.guidance_lock",
         "schema_version": _LOCK_SCHEMA_VERSION,
@@ -232,7 +341,15 @@ def validate_project_agent(root: Path) -> tuple[str, ...]:
     try:
         # Every rule is parsed and every referenced file checked by selecting its concerns.
         index = json.loads((base / "index.json").read_text(encoding="utf-8"))
-        concerns = sorted({c for r in index.get("rules", []) if isinstance(r, dict) for c in r.get("concerns", []) if isinstance(c, str)})
+        concerns = sorted(
+            {
+                c
+                for r in index.get("rules", [])
+                if isinstance(r, dict)
+                for c in r.get("concerns", [])
+                if isinstance(c, str)
+            }
+        )
         if index.get("schema_version") != _PROJECT_AGENT_SCHEMA_VERSION:
             raise GuidanceError("unsupported .project-agent/automo index schema")
         _load_project_agent(root, concerns, ())
@@ -250,7 +367,9 @@ def validate_guidance_pack() -> tuple[str, ...]:
             errors.append(f"{task_class}: selection failed: {exc}")
             continue
         if len(docs) > _MAX_SELECTED_DOCUMENTS:
-            errors.append(f"{task_class}: selects {len(docs)} documents; maximum is {_MAX_SELECTED_DOCUMENTS}")
+            errors.append(
+                f"{task_class}: selects {len(docs)} documents; maximum is {_MAX_SELECTED_DOCUMENTS}"
+            )
         paths = {doc.path for doc in docs}
         for required in _REQUIRED_TASK_DOCUMENTS[task_class]:
             if required not in paths:

@@ -48,7 +48,13 @@ class MissingWorkflow:
 def _copy_project(tmp_path: Path) -> Path:
     source = Path(__file__).parents[1]
     root = tmp_path / "project"
-    shutil.copytree(source, root, ignore=shutil.ignore_patterns(".pytest_cache", "__pycache__", "capability-results", "build", "dist", "*.egg-info"))
+    shutil.copytree(
+        source,
+        root,
+        ignore=shutil.ignore_patterns(
+            ".pytest_cache", "__pycache__", "capability-results", "build", "dist", "*.egg-info"
+        ),
+    )
     shutil.copytree(source / "tests/fixtures/runs", root / "runs")
     return root
 
@@ -117,9 +123,7 @@ def test_protected_evidence_change_is_rejected(tmp_path: Path) -> None:
         def fulfill(self, root: Path, request):
             target = next((root / "runs").rglob("*.json"))
             target.write_text("{}\n", encoding="utf-8")
-            return WorkflowFulfillment(
-                CapabilityResultStatus.FULFILLED, (), (), "mutated evidence"
-            )
+            return WorkflowFulfillment(CapabilityResultStatus.FULFILLED, (), (), "mutated evidence")
 
     with pytest.raises(CapabilityLifecycleError, match="altered protected research evidence"):
         fulfill_capability(

@@ -4,7 +4,6 @@ from typer.testing import CliRunner
 
 from automo.cli import app
 
-
 ROOT = Path(__file__).parents[1]
 FIXTURE_RUNS = ROOT / "tests/fixtures/runs"
 RUNNER = CliRunner()
@@ -75,7 +74,17 @@ def test_run_temporal_stability_cli(tmp_path: Path) -> None:
         (ROOT / "research/experiments/EXPERIMENT-0002.yaml").read_bytes()
     )
     (project / "data/local-fixture.csv").write_bytes((ROOT / "data/local-fixture.csv").read_bytes())
-    result = RUNNER.invoke(app, ["run-temporal-stability", "EXPERIMENT-0002", "--root", str(project), "--run-id", "cli-stability"])
+    result = RUNNER.invoke(
+        app,
+        [
+            "run-temporal-stability",
+            "EXPERIMENT-0002",
+            "--root",
+            str(project),
+            "--run-id",
+            "cli-stability",
+        ],
+    )
     assert result.exit_code == 0
     assert "Folds executed: 3" in result.stdout
     assert (project / "runs/cli-stability/temporal-stability.json").exists()
@@ -83,11 +92,20 @@ def test_run_temporal_stability_cli(tmp_path: Path) -> None:
 
 def test_recommend_promotion_cli(tmp_path):
     import shutil
+
     from typer.testing import CliRunner
+
     from automo.cli import app
+
     root = tmp_path / "project"
     source = Path(__file__).parents[1]
-    shutil.copytree(source, root, ignore=shutil.ignore_patterns(".pytest_cache", "__pycache__", "recommendations", "build", "dist", "*.egg-info"))
+    shutil.copytree(
+        source,
+        root,
+        ignore=shutil.ignore_patterns(
+            ".pytest_cache", "__pycache__", "recommendations", "build", "dist", "*.egg-info"
+        ),
+    )
     shutil.copytree(source / "tests/fixtures/runs", root / "runs")
     result = CliRunner().invoke(app, ["recommend-promotion", "--root", str(root)])
     assert result.exit_code == 0

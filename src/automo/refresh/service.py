@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from automo.persistence import write_json_artifact
 from automo.registry import FilesystemModelRegistry, ModelStatus
@@ -12,7 +13,6 @@ from automo.runtime.project import ResearchRuntime
 from .contracts import (
     Calibrator,
     DataIteration,
-    EvaluationPartitions,
     ModelPoolSnapshot,
     ModelPoolSpec,
     ModelRefreshDisposition,
@@ -25,7 +25,9 @@ from .contracts import (
 from .pool import FilesystemPoolStore
 
 
-def _rows(rows: Sequence[Mapping[str, Any]], indices: tuple[int, ...]) -> tuple[Mapping[str, Any], ...]:
+def _rows(
+    rows: Sequence[Mapping[str, Any]], indices: tuple[int, ...]
+) -> tuple[Mapping[str, Any], ...]:
     return tuple(rows[i] for i in indices)
 
 
@@ -59,7 +61,13 @@ class RefreshService:
         truth = tuple(float(row[spec.objective.target]) for row in rows)
         return spec, materialized, truth
 
-    def _evaluate_model(self, model_spec_id: str, model: Any, rows: Sequence[Mapping[str, Any]], calibration: Any | None = None) -> dict[str, float]:
+    def _evaluate_model(
+        self,
+        model_spec_id: str,
+        model: Any,
+        rows: Sequence[Mapping[str, Any]],
+        calibration: Any | None = None,
+    ) -> dict[str, float]:
         spec, materialized, truth = self._materialize(model_spec_id, rows)
         prediction = tuple(float(v) for v in model.predict(materialized))
         if calibration is not None:
@@ -67,7 +75,13 @@ class RefreshService:
         metrics = (spec.evaluation.primary, *spec.evaluation.secondary)
         return {m.id: self.runtime.metrics[m.id].evaluate(truth, prediction) for m in metrics}
 
-    def _fit_calibration(self, pool: ModelPoolSpec, model_spec_id: str, model: Any, fit_rows: Sequence[Mapping[str, Any]]):
+    def _fit_calibration(
+        self,
+        pool: ModelPoolSpec,
+        model_spec_id: str,
+        model: Any,
+        fit_rows: Sequence[Mapping[str, Any]],
+    ):
         calibrator_id = pool.calibration_policy.calibrator
         if not calibrator_id:
             return None, None
@@ -75,7 +89,7 @@ class RefreshService:
             calibrator = self.calibrators[calibrator_id]
         except KeyError as exc:
             raise RefreshError(f"unknown calibrator: {calibrator_id}") from exc
-        spec, materialized, truth = self._materialize(model_spec_id, fit_rows)
+        _spec, materialized, truth = self._materialize(model_spec_id, fit_rows)
         prediction = model.predict(materialized)
         return calibrator, calibrator.fit(prediction, truth)
 
@@ -89,34 +103,69 @@ class RefreshService:
             for metric_id, value in values.items():
                 contract = metric_specs[metric_id]
                 self.registry.append_benchmark(
-                    card.model_id, metric_id=metric_id, direction=contract.direction, scope=contract.scope,
-                    value=value, sample_count=count, split=split_name, calibration_id=card.calibration_id,
+                    card.model_id,
+                    metric_id=metric_id,
+                    direction=contract.direction,
+                    scope=contract.scope,
+                    value=value,
+                    sample_count=count,
+                    split=split_name,
+                    calibration_id=card.calibration_id,
                 )
 
     @staticmethod
-    def _validation_test_degradation(card: RefreshScoreCard, metric: str, direction: MetricDirection) -> float:
+    def _validation_test_degradation(
+        card: RefreshScoreCard, metric: str, direction: MetricDirection
+    ) -> float:
         validation = card.validation_metrics[metric]
         test = card.test_metrics[metric]
         return (test - validation) if direction == MetricDirection.MINIMIZE else (validation - test)
 
-    def plan(self, pool: ModelPoolSpec, iteration: DataIteration, split: SplitStrategy, *, data_source_id: str) -> dict[str, Any]:
+    def plan(
+        self,
+        pool: ModelPoolSpec,
+        iteration: DataIteration,
+        split: SplitStrategy,
+        *,
+        data_source_id: str,
+    ) -> dict[str, Any]:
         snapshot = self.runtime.data_sources[data_source_id].snapshot()
         if snapshot.id != iteration.snapshot_id or snapshot.content_hash != iteration.snapshot_hash:
             raise RefreshError("data iteration does not match current data snapshot")
         partitions = split.split(snapshot)
         allowed_specs = set(pool.resolved_model_spec_ids)
-        active = [r for r in self.registry.list_models() if r.manifest.objective_id == pool.objective_id and r.manifest.model_spec_id in allowed_specs and r.status in {ModelStatus.ACTIVE, ModelStatus.VALIDATED, ModelStatus.DEGRADED}]
+        active = [
+            r
+            for r in self.registry.list_models()
+            if r.manifest.objective_id == pool.objective_id
+            and r.manifest.model_spec_id in allowed_specs
+            and r.status in {ModelStatus.ACTIVE, ModelStatus.VALIDATED, ModelStatus.DEGRADED}
+        ]
         return {
             "iteration_id": iteration.id,
             "pool_id": pool.id,
             "split_strategy": split.id,
-            "counts": {"fit": len(partitions.fit.row_indices), "validation": len(partitions.validation.row_indices), "test": len(partitions.test.row_indices)},
+            "counts": {
+                "fit": len(partitions.fit.row_indices),
+                "validation": len(partitions.validation.row_indices),
+                "test": len(partitions.test.row_indices),
+            },
             "models": [r.manifest.id for r in active],
-            "recalibration_planned": bool(pool.calibration_policy.each_iteration and pool.calibration_policy.calibrator),
+            "recalibration_planned": bool(
+                pool.calibration_policy.each_iteration and pool.calibration_policy.calibrator
+            ),
             "retraining_planned": bool(pool.training_policy.each_iteration),
         }
 
-    def run(self, pool: ModelPoolSpec, iteration: DataIteration, split: SplitStrategy, *, data_source_id: str, dry_run: bool = False) -> dict[str, Any]:
+    def run(
+        self,
+        pool: ModelPoolSpec,
+        iteration: DataIteration,
+        split: SplitStrategy,
+        *,
+        data_source_id: str,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
         snapshot = self.runtime.data_sources[data_source_id].snapshot()
         if snapshot.id != iteration.snapshot_id or snapshot.content_hash != iteration.snapshot_hash:
             raise RefreshError("data iteration does not match current data snapshot")
@@ -132,7 +181,13 @@ class RefreshService:
         directory.mkdir(parents=True)
 
         allowed_specs = set(pool.resolved_model_spec_ids)
-        records = [r for r in self.registry.list_models() if r.manifest.objective_id == pool.objective_id and r.manifest.model_spec_id in allowed_specs and r.status in {ModelStatus.ACTIVE, ModelStatus.VALIDATED, ModelStatus.DEGRADED}]
+        records = [
+            r
+            for r in self.registry.list_models()
+            if r.manifest.objective_id == pool.objective_id
+            and r.manifest.model_spec_id in allowed_specs
+            and r.status in {ModelStatus.ACTIVE, ModelStatus.VALIDATED, ModelStatus.DEGRADED}
+        ]
         scorecards: list[RefreshScoreCard] = []
         dispositions: list[ModelRefreshDisposition] = []
 
@@ -141,18 +196,26 @@ class RefreshService:
             model_spec_id = record.manifest.model_spec_id
             base_val = self._evaluate_model(model_spec_id, model, validation_rows)
             base_test = self._evaluate_model(model_spec_id, model, test_rows)
-            chosen_calibration = None
             chosen_calibration_id = None
             action = RefreshAction.KEEP
             reasons = ["existing model evaluated on validation and refresh-OOS"]
 
-            if pool.calibration_policy.each_iteration and len(fit_rows) >= pool.calibration_policy.min_fit_observations and pool.calibration_policy.calibrator:
-                calibrator, candidate_calibration = self._fit_calibration(pool, model_spec_id, model, fit_rows)
-                candidate_val = self._evaluate_model(model_spec_id, model, validation_rows, candidate_calibration)
+            if (
+                pool.calibration_policy.each_iteration
+                and len(fit_rows) >= pool.calibration_policy.min_fit_observations
+                and pool.calibration_policy.calibrator
+            ):
+                calibrator, candidate_calibration = self._fit_calibration(
+                    pool, model_spec_id, model, fit_rows
+                )
+                candidate_val = self._evaluate_model(
+                    model_spec_id, model, validation_rows, candidate_calibration
+                )
                 metric = pool.primary_metric_id
                 if _better(candidate_val[metric], base_val[metric], pool.primary_metric_direction):
-                    chosen_calibration = candidate_calibration
-                    candidate_test = self._evaluate_model(model_spec_id, model, test_rows, candidate_calibration)
+                    candidate_test = self._evaluate_model(
+                        model_spec_id, model, test_rows, candidate_calibration
+                    )
                     manifest = self.registry.register_calibration(
                         record.manifest.id,
                         candidate_calibration,
@@ -164,9 +227,13 @@ class RefreshService:
                     chosen_calibration_id = manifest.id
                     base_val, base_test = candidate_val, candidate_test
                     action = RefreshAction.RECALIBRATE
-                    reasons.append("candidate recalibration improved validation before refresh-OOS evaluation")
+                    reasons.append(
+                        "candidate recalibration improved validation before refresh-OOS evaluation"
+                    )
                 else:
-                    reasons.append("candidate recalibration rejected on validation; refresh-OOS remained untouched for that variant")
+                    reasons.append(
+                        "candidate recalibration rejected on validation; refresh-OOS remained untouched for that variant"
+                    )
 
             card = RefreshScoreCard(
                 model_id=record.manifest.id,
@@ -179,23 +246,48 @@ class RefreshService:
             )
             scorecards.append(card)
             self._record_scorecard(pool, card)
-            dispositions.append(ModelRefreshDisposition(record.manifest.id, action, tuple(reasons), calibration_id=chosen_calibration_id))
+            dispositions.append(
+                ModelRefreshDisposition(
+                    record.manifest.id, action, tuple(reasons), calibration_id=chosen_calibration_id
+                )
+            )
 
-        if pool.training_policy.each_iteration and len(fit_rows) >= pool.training_policy.min_new_observations:
+        if (
+            pool.training_policy.each_iteration
+            and len(fit_rows) >= pool.training_policy.min_new_observations
+        ):
             for model_spec_id in pool.resolved_model_spec_ids:
                 spec, materialized, truth = self._materialize(model_spec_id, fit_rows)
                 runner = self.runtime.model_runners[spec.implementation]
                 fitted = runner.fit(spec, materialized, target=truth)
                 candidate_val = self._evaluate_model(model_spec_id, fitted, validation_rows)
                 metric = pool.primary_metric_id
-                comparable = [card for card in scorecards if self.registry.get_manifest(card.model_id).model_spec_id in allowed_specs]
-                incumbent_best = min(comparable, key=lambda s: s.validation_metrics[metric]) if pool.primary_metric_direction == MetricDirection.MINIMIZE and comparable else max(comparable, key=lambda s: s.validation_metrics[metric]) if comparable else None
-                if incumbent_best is None or _better(candidate_val[metric], incumbent_best.validation_metrics[metric], pool.primary_metric_direction):
+                comparable = [
+                    card
+                    for card in scorecards
+                    if self.registry.get_manifest(card.model_id).model_spec_id in allowed_specs
+                ]
+                incumbent_best = (
+                    min(comparable, key=lambda s: s.validation_metrics[metric])
+                    if pool.primary_metric_direction == MetricDirection.MINIMIZE and comparable
+                    else max(comparable, key=lambda s: s.validation_metrics[metric])
+                    if comparable
+                    else None
+                )
+                if incumbent_best is None or _better(
+                    candidate_val[metric],
+                    incumbent_best.validation_metrics[metric],
+                    pool.primary_metric_direction,
+                ):
                     codec = getattr(runner, "artifact_codec", None)
                     if codec is None:
-                        raise RefreshError("runner must expose artifact_codec for refresh retraining")
-                    from automo.registry import TrainingProvenance
+                        raise RefreshError(
+                            "runner must expose artifact_codec for refresh retraining"
+                        )
                     import platform
+
+                    from automo.registry import TrainingProvenance
+
                     provenance = TrainingProvenance(
                         data_source_id=data_source_id,
                         data_snapshot_id=snapshot.id,
@@ -216,10 +308,27 @@ class RefreshService:
                         codec=codec,
                     )
                     test_metrics = self._evaluate_model(model_spec_id, fitted, test_rows)
-                    card = RefreshScoreCard(manifest.id, None, candidate_val, test_metrics, len(validation_rows), len(test_rows), source="retrained")
+                    card = RefreshScoreCard(
+                        manifest.id,
+                        None,
+                        candidate_val,
+                        test_metrics,
+                        len(validation_rows),
+                        len(test_rows),
+                        source="retrained",
+                    )
                     scorecards.append(card)
                     self._record_scorecard(pool, card)
-                    dispositions.append(ModelRefreshDisposition(manifest.id, RefreshAction.RETRAIN, ("retrained candidate improved validation before refresh-OOS evaluation",), replacement_model_id=manifest.id))
+                    dispositions.append(
+                        ModelRefreshDisposition(
+                            manifest.id,
+                            RefreshAction.RETRAIN,
+                            (
+                                "retrained candidate improved validation before refresh-OOS evaluation",
+                            ),
+                            replacement_model_id=manifest.id,
+                        )
+                    )
 
         metric = pool.primary_metric_id
         eligible = []
@@ -227,52 +336,117 @@ class RefreshService:
             if card.test_count < pool.retention_policy.minimum_test_observations:
                 continue
             maximum = pool.retention_policy.maximum_validation_test_degradation
-            if maximum is not None and self._validation_test_degradation(card, metric, pool.primary_metric_direction) > maximum:
-                dispositions.append(ModelRefreshDisposition(card.model_id, RefreshAction.DEGRADE, ("validation-to-refresh-OOS degradation exceeded retention policy",), calibration_id=card.calibration_id))
+            if (
+                maximum is not None
+                and self._validation_test_degradation(card, metric, pool.primary_metric_direction)
+                > maximum
+            ):
+                dispositions.append(
+                    ModelRefreshDisposition(
+                        card.model_id,
+                        RefreshAction.DEGRADE,
+                        ("validation-to-refresh-OOS degradation exceeded retention policy",),
+                        calibration_id=card.calibration_id,
+                    )
+                )
                 continue
             eligible.append(card)
-        eligible.sort(key=lambda card: card.test_metrics[metric], reverse=pool.primary_metric_direction == MetricDirection.MAXIMIZE)
+        eligible.sort(
+            key=lambda card: card.test_metrics[metric],
+            reverse=pool.primary_metric_direction == MetricDirection.MAXIMIZE,
+        )
         retained = eligible[: pool.retention_policy.top_k]
         active_ids = tuple(card.model_id for card in retained)
 
         for record in self.registry.list_models():
-            if record.manifest.objective_id != pool.objective_id or record.manifest.model_spec_id not in allowed_specs:
+            if (
+                record.manifest.objective_id != pool.objective_id
+                or record.manifest.model_spec_id not in allowed_specs
+            ):
                 continue
             if record.manifest.id in active_ids:
                 if record.status == ModelStatus.CANDIDATE:
-                    self.registry.transition(record.manifest.id, ModelStatus.VALIDATED, reason=f"retained by refresh {iteration.id}")
-                    self.registry.transition(record.manifest.id, ModelStatus.ACTIVE, reason=f"admitted to pool {pool.id}")
+                    self.registry.transition(
+                        record.manifest.id,
+                        ModelStatus.VALIDATED,
+                        reason=f"retained by refresh {iteration.id}",
+                    )
+                    self.registry.transition(
+                        record.manifest.id, ModelStatus.ACTIVE, reason=f"admitted to pool {pool.id}"
+                    )
                 elif record.status == ModelStatus.VALIDATED:
-                    self.registry.transition(record.manifest.id, ModelStatus.ACTIVE, reason=f"admitted to pool {pool.id}")
+                    self.registry.transition(
+                        record.manifest.id, ModelStatus.ACTIVE, reason=f"admitted to pool {pool.id}"
+                    )
                 elif record.status == ModelStatus.DEGRADED:
-                    self.registry.transition(record.manifest.id, ModelStatus.ACTIVE, reason=f"restored by refresh {iteration.id}")
+                    self.registry.transition(
+                        record.manifest.id,
+                        ModelStatus.ACTIVE,
+                        reason=f"restored by refresh {iteration.id}",
+                    )
             elif record.status == ModelStatus.ACTIVE:
-                self.registry.transition(record.manifest.id, ModelStatus.DEGRADED, reason=f"not retained by refresh {iteration.id}")
+                self.registry.transition(
+                    record.manifest.id,
+                    ModelStatus.DEGRADED,
+                    reason=f"not retained by refresh {iteration.id}",
+                )
 
         preliminary = ModelPoolSnapshot(pool.id, iteration.id, active_ids, (), tuple(scorecards))
         if pool.selection_policy.selector:
             try:
                 selector = self.selectors[pool.selection_policy.selector]
             except KeyError as exc:
-                raise RefreshError(f"unknown model selector: {pool.selection_policy.selector}") from exc
-            selected_ids = tuple(selector.select(pool, preliminary, context={"iteration_id": iteration.id, "metric_id": metric, "direction": pool.primary_metric_direction.value}))
+                raise RefreshError(
+                    f"unknown model selector: {pool.selection_policy.selector}"
+                ) from exc
+            selected_ids = tuple(
+                selector.select(
+                    pool,
+                    preliminary,
+                    context={
+                        "iteration_id": iteration.id,
+                        "metric_id": metric,
+                        "direction": pool.primary_metric_direction.value,
+                    },
+                )
+            )
             if not set(selected_ids).issubset(set(active_ids)):
                 raise RefreshError("model selector returned a model outside the retained pool")
         elif pool.selection_policy.kind == SelectionKind.RECENT_BEST:
             selected_ids = active_ids[:1]
         else:
+
             def overall_value(card: RefreshScoreCard) -> float:
-                observations = [b.value for b in self.registry.benchmarks(card.model_id) if b.metric_id == metric and b.split == "refresh_oos"]
-                return sum(observations) / len(observations) if observations else card.test_metrics[metric]
-            overall = sorted(retained, key=overall_value, reverse=pool.primary_metric_direction == MetricDirection.MAXIMIZE)
+                observations = [
+                    b.value
+                    for b in self.registry.benchmarks(card.model_id)
+                    if b.metric_id == metric and b.split == "refresh_oos"
+                ]
+                return (
+                    sum(observations) / len(observations)
+                    if observations
+                    else card.test_metrics[metric]
+                )
+
+            overall = sorted(
+                retained,
+                key=overall_value,
+                reverse=pool.primary_metric_direction == MetricDirection.MAXIMIZE,
+            )
             selected_ids = tuple(card.model_id for card in overall[:1])
-        pool_snapshot = ModelPoolSnapshot(pool.id, iteration.id, active_ids, selected_ids, tuple(scorecards))
+        pool_snapshot = ModelPoolSnapshot(
+            pool.id, iteration.id, active_ids, selected_ids, tuple(scorecards)
+        )
         snapshot_path = self.pool_store.save_snapshot(pool_snapshot)
 
         report = {
             "iteration": asdict(iteration),
             "split_strategy": split.id,
-            "partition_counts": {"fit": len(fit_rows), "validation": len(validation_rows), "test": len(test_rows)},
+            "partition_counts": {
+                "fit": len(fit_rows),
+                "validation": len(validation_rows),
+                "test": len(test_rows),
+            },
             "scorecards": [asdict(x) for x in scorecards],
             "dispositions": [asdict(x) for x in dispositions],
             "retained_model_ids": list(active_ids),

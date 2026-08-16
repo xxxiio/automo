@@ -71,7 +71,10 @@ def test_mixed_feature_effect_is_inconclusive(tmp_path: Path) -> None:
 def test_feature_group_limit_blocks_unbounded_analysis(tmp_path: Path) -> None:
     project, _ = _copy_run(tmp_path, "bounded")
     feature_path = project / "research/features/FEATURESET-CORE-0001.yaml"
-    feature_path.write_text(feature_path.read_text() + "\n  - id: FEATURE-GROUP-EXTRA\n    description: extra\n    features: [feature_2]\n    ablation_reference: BASELINE-NAIVE-0001\n")
+    feature_path.write_text(
+        feature_path.read_text()
+        + "\n  - id: FEATURE-GROUP-EXTRA\n    description: extra\n    features: [feature_2]\n    ablation_reference: BASELINE-NAIVE-0001\n"
+    )
     with pytest.raises(FeatureDispositionError, match="bounded-analysis"):
         dispose_local_features(project, "bounded")
 

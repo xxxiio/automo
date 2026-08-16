@@ -14,10 +14,14 @@ class FeatureEngine:
     def __init__(self, computers: tuple[FeatureComputer, ...]) -> None:
         self._computers = {item.spec.id: item for item in computers}
 
-    def materialize(self, rows: tuple[Mapping[str, Any], ...], feature_set: FeatureSetSpec) -> tuple[dict[str, Any], ...]:
+    def materialize(
+        self, rows: tuple[Mapping[str, Any], ...], feature_set: FeatureSetSpec
+    ) -> tuple[dict[str, Any], ...]:
         return tuple(self._materialize_row(row, feature_set) for row in rows)
 
-    def _materialize_row(self, row: Mapping[str, Any], feature_set: FeatureSetSpec) -> dict[str, Any]:
+    def _materialize_row(
+        self, row: Mapping[str, Any], feature_set: FeatureSetSpec
+    ) -> dict[str, Any]:
         resolved: dict[str, Any] = dict(row)
         visiting: set[str] = set()
 

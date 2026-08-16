@@ -22,7 +22,7 @@ class CapabilityScope:
     forbidden_paths: tuple[str, ...]
 
     @classmethod
-    def from_mapping(cls, value: dict[str, Any]) -> "CapabilityScope":
+    def from_mapping(cls, value: dict[str, Any]) -> CapabilityScope:
         allowed = _string_list(value.get("allowed_paths", []), "scope.allowed_paths")
         forbidden = _string_list(value.get("forbidden_paths", []), "scope.forbidden_paths")
         if not allowed:
@@ -44,10 +44,16 @@ class CapabilityRequest:
     scope: CapabilityScope
 
     @classmethod
-    def from_mapping(cls, value: dict[str, Any]) -> "CapabilityRequest":
+    def from_mapping(cls, value: dict[str, Any]) -> CapabilityRequest:
         required = (
-            "id", "experiment", "capability", "reason", "contract",
-            "requirements", "acceptance", "scope",
+            "id",
+            "experiment",
+            "capability",
+            "reason",
+            "contract",
+            "requirements",
+            "acceptance",
+            "scope",
         )
         missing = [key for key in required if key not in value]
         if missing:

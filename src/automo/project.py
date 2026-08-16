@@ -5,7 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from automo.contracts import ContractError, ExperimentSpec, ResearchObjective, load_experiment, load_objective
+from automo.contracts import (
+    ContractError,
+    ExperimentSpec,
+    ResearchObjective,
+    load_experiment,
+    load_objective,
+)
 
 
 @dataclass(frozen=True)

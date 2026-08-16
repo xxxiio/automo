@@ -3,11 +3,9 @@ from pathlib import Path
 
 import pytest
 
+from automo.contracts import load_experiment
 from automo.execution import run_local_experiment
 from automo.execution.local import ExecutionError
-from automo.project import ResearchProject
-from automo.contracts import load_experiment
-
 
 ROOT = Path(__file__).parents[1]
 
@@ -79,9 +77,7 @@ def _copy_experiment_project(tmp_path: Path) -> Path:
     (project / "research/experiments/EXPERIMENT-0001.yaml").write_bytes(
         (ROOT / "research/experiments/EXPERIMENT-0001.yaml").read_bytes()
     )
-    (project / "data/local-fixture.csv").write_bytes(
-        (ROOT / "data/local-fixture.csv").read_bytes()
-    )
+    (project / "data/local-fixture.csv").write_bytes((ROOT / "data/local-fixture.csv").read_bytes())
     return project
 
 
@@ -114,7 +110,9 @@ def test_post_freeze_experiment_change_is_rejected(tmp_path: Path) -> None:
     prepared = prepare_local_experiment(project, experiment, run_id="frozen-experiment")
     experiment_path = project / "research/experiments/EXPERIMENT-0001.yaml"
     experiment_path.write_text(experiment_path.read_text() + "\n# changed after freeze\n")
-    with pytest.raises(ExecutionError, match="post-freeze configuration change detected: experiment"):
+    with pytest.raises(
+        ExecutionError, match="post-freeze configuration change detected: experiment"
+    ):
         evaluate_local_out_of_sample(project, prepared.run_id)
 
 

@@ -160,7 +160,9 @@ class ExperimentSpec:
             why_next=_string(value["why_next"], "why_next"),
             hypothesis=_string(value["hypothesis"], "hypothesis"),
             rationale=tuple(_string_list(value.get("rationale", []))),
-            expected_effect=_string(value.get("expected_effect", "not specified"), "expected_effect"),
+            expected_effect=_string(
+                value.get("expected_effect", "not specified"), "expected_effect"
+            ),
             falsification=tuple(_string_list(value["falsification"])),
             baseline=_string(value["baseline"], "baseline"),
             candidate_model=_string(candidate["model"], "candidate.model"),
@@ -194,8 +196,10 @@ class FeatureGroup:
     ablation_reference: str
 
     @classmethod
-    def from_mapping(cls, value: dict[str, Any]) -> "FeatureGroup":
-        _require_keys(value, ("id", "features", "description", "ablation_reference"), "feature group")
+    def from_mapping(cls, value: dict[str, Any]) -> FeatureGroup:
+        _require_keys(
+            value, ("id", "features", "description", "ablation_reference"), "feature group"
+        )
         features = tuple(_string_list(value["features"]))
         if not features:
             raise ContractError("feature group must contain at least one feature")
@@ -214,7 +218,7 @@ class FeatureSetSpec:
     groups: tuple[FeatureGroup, ...]
 
     @classmethod
-    def from_mapping(cls, value: dict[str, Any]) -> "FeatureSetSpec":
+    def from_mapping(cls, value: dict[str, Any]) -> FeatureSetSpec:
         _require_keys(value, ("id", "disposition_policy", "groups"), "feature set")
         groups = tuple(
             FeatureGroup.from_mapping(_mapping(item, "feature group"))
@@ -246,12 +250,17 @@ class FeatureDispositionPolicy:
     maximum_feature_groups: int
 
     @classmethod
-    def from_mapping(cls, value: dict[str, Any]) -> "FeatureDispositionPolicy":
+    def from_mapping(cls, value: dict[str, Any]) -> FeatureDispositionPolicy:
         required = (
-            "id", "metric", "lower_is_better",
-            "minimum_validation_observations", "minimum_out_of_sample_observations",
-            "minimum_validation_improvement", "minimum_out_of_sample_improvement",
-            "minimum_validation_harm", "minimum_out_of_sample_harm",
+            "id",
+            "metric",
+            "lower_is_better",
+            "minimum_validation_observations",
+            "minimum_out_of_sample_observations",
+            "minimum_validation_improvement",
+            "minimum_out_of_sample_improvement",
+            "minimum_validation_harm",
+            "minimum_out_of_sample_harm",
             "maximum_feature_groups",
         )
         _require_keys(value, required, "feature disposition policy")
@@ -261,13 +270,27 @@ class FeatureDispositionPolicy:
             identifier=_string(value["id"], "id"),
             metric=_string(value["metric"], "metric"),
             lower_is_better=value["lower_is_better"],
-            minimum_validation_observations=_positive_int(value["minimum_validation_observations"], "minimum_validation_observations"),
-            minimum_out_of_sample_observations=_positive_int(value["minimum_out_of_sample_observations"], "minimum_out_of_sample_observations"),
-            minimum_validation_improvement=_non_negative_float(value["minimum_validation_improvement"], "minimum_validation_improvement"),
-            minimum_out_of_sample_improvement=_non_negative_float(value["minimum_out_of_sample_improvement"], "minimum_out_of_sample_improvement"),
-            minimum_validation_harm=_non_negative_float(value["minimum_validation_harm"], "minimum_validation_harm"),
-            minimum_out_of_sample_harm=_non_negative_float(value["minimum_out_of_sample_harm"], "minimum_out_of_sample_harm"),
-            maximum_feature_groups=_positive_int(value["maximum_feature_groups"], "maximum_feature_groups"),
+            minimum_validation_observations=_positive_int(
+                value["minimum_validation_observations"], "minimum_validation_observations"
+            ),
+            minimum_out_of_sample_observations=_positive_int(
+                value["minimum_out_of_sample_observations"], "minimum_out_of_sample_observations"
+            ),
+            minimum_validation_improvement=_non_negative_float(
+                value["minimum_validation_improvement"], "minimum_validation_improvement"
+            ),
+            minimum_out_of_sample_improvement=_non_negative_float(
+                value["minimum_out_of_sample_improvement"], "minimum_out_of_sample_improvement"
+            ),
+            minimum_validation_harm=_non_negative_float(
+                value["minimum_validation_harm"], "minimum_validation_harm"
+            ),
+            minimum_out_of_sample_harm=_non_negative_float(
+                value["minimum_out_of_sample_harm"], "minimum_out_of_sample_harm"
+            ),
+            maximum_feature_groups=_positive_int(
+                value["maximum_feature_groups"], "maximum_feature_groups"
+            ),
         )
 
 
@@ -284,7 +307,7 @@ class DecisionPolicy:
     require_directional_agreement: bool
 
     @classmethod
-    def from_mapping(cls, value: dict[str, Any]) -> "DecisionPolicy":
+    def from_mapping(cls, value: dict[str, Any]) -> DecisionPolicy:
         required = (
             "id",
             "metric",

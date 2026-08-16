@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Mapping, Protocol, Sequence
+from typing import Any, Protocol
 
 
 class MetricDirection(StrEnum):
@@ -27,6 +28,7 @@ class DataSnapshot:
 
 class DataSource(Protocol):
     id: str
+
     def snapshot(self) -> DataSnapshot: ...
 
 
@@ -51,6 +53,7 @@ class FeatureSetSpec:
 
 class FeatureComputer(Protocol):
     spec: FeatureSpec
+
     def compute(self, row: Mapping[str, Any], resolved: Mapping[str, Any]) -> Any: ...
 
 
@@ -136,7 +139,9 @@ class FittedModel(Protocol):
 
 class ModelRunner(Protocol):
     """Legacy supervised runner contract kept for compatibility."""
+
     implementation: str
+
     def fit(
         self,
         spec: ModelSpec,
@@ -166,6 +171,7 @@ class TrainingResult:
 
 class ModelTrainer(Protocol):
     implementation: str
+
     def fit(self, request: TrainingRequest) -> TrainingResult: ...
 
 
@@ -195,12 +201,15 @@ class EvaluationContext:
 
 class Evaluator(Protocol):
     id: str
+
     def evaluate(self, context: EvaluationContext) -> float: ...
 
 
 class Metric(Protocol):
     """Legacy numeric metric contract kept for compatibility."""
+
     id: str
+
     def evaluate(self, truth: Sequence[float], prediction: Sequence[float]) -> float: ...
 
 

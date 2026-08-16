@@ -1,14 +1,21 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
-from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from automo.persistence import write_yaml_artifact
 from automo.refresh.contracts import SplitStrategy
-from automo.runtime.contracts import EvaluationContext, MetricDirection, ModelOutputBatch, ModelSpec, PredictionRequest, TrainingRequest
-from automo.runtime.project import ResearchRuntime
+from automo.runtime.contracts import (
+    EvaluationContext,
+    MetricDirection,
+    ModelOutputBatch,
+    ModelSpec,
+    PredictionRequest,
+    TrainingRequest,
+)
 from automo.runtime.graph import LegacyPredictorAdapter
+from automo.runtime.project import ResearchRuntime
 
 from .contracts import (
     CandidateProposal,
@@ -32,7 +39,11 @@ class ResearchError(RuntimeError):
 _DIAGNOSIS_ORDER: Mapping[str, tuple[InterventionKind, ...]] = {
     "poor_calibration": (InterventionKind.CALIBRATION,),
     "overfitting": (InterventionKind.PARAMETERS, InterventionKind.FEATURE_SET),
-    "underfitting": (InterventionKind.MODEL, InterventionKind.FEATURE_SET, InterventionKind.PARAMETERS),
+    "underfitting": (
+        InterventionKind.MODEL,
+        InterventionKind.FEATURE_SET,
+        InterventionKind.PARAMETERS,
+    ),
     "feature_gap": (InterventionKind.FEATURE_SET,),
     "feature_redundancy": (InterventionKind.FEATURE_SET,),
     "training_staleness": (InterventionKind.TRAINING_WINDOW,),
@@ -72,9 +83,13 @@ class ResearchService:
             raise ResearchError(f"unknown data source: {data_source_id}")
         if split_strategy_id not in self.splits:
             raise ResearchError(f"unknown split strategy: {split_strategy_id}")
-        proposals = self._generate_candidates(baseline_model_spec_id, diagnosis, findings, search_space)
+        proposals = self._generate_candidates(
+            baseline_model_spec_id, diagnosis, findings, search_space
+        )
         prior = self.store.fingerprints()
-        proposals = tuple(item for item in proposals if item.fingerprint not in prior)[: budget.maximum_candidates]
+        proposals = tuple(item for item in proposals if item.fingerprint not in prior)[
+            : budget.maximum_candidates
+        ]
         if not proposals:
             raise ResearchError("no untested candidates remain within the committed search space")
         plan = ResearchPlan(
@@ -96,7 +111,9 @@ class ResearchService:
         snapshot = self.runtime.data_sources[plan.data_source_id].snapshot()
         partitions = self.splits[plan.split_strategy_id].split(snapshot)
         if len(partitions.validation.row_indices) < plan.safeguards.minimum_validation_observations:
-            raise ResearchError("validation partition is below the committed minimum observation count")
+            raise ResearchError(
+                "validation partition is below the committed minimum observation count"
+            )
         if len(partitions.test.row_indices) < plan.safeguards.minimum_oos_observations:
             raise ResearchError("OOS partition is below the committed minimum observation count")
         fit_rows = self._rows(snapshot.rows, partitions.fit.row_indices)
@@ -112,56 +129,90 @@ class ResearchService:
         staged: list[tuple[CandidateProposal, ModelSpec, Any, float, Any | None, str | None]] = []
         rejected: list[CandidateResult] = []
         for proposal in plan.candidates:
-            if validation_trials >= plan.budget.maximum_candidates or fit_count >= plan.budget.maximum_model_fits:
+            if (
+                validation_trials >= plan.budget.maximum_candidates
+                or fit_count >= plan.budget.maximum_model_fits
+            ):
                 break
             try:
-                candidate_spec, model, calibration, calibration_id = self._fit_candidate(proposal, baseline_spec, fit_rows)
+                candidate_spec, model, calibration, calibration_id = self._fit_candidate(
+                    proposal, baseline_spec, fit_rows
+                )
             except ResearchError as exc:
                 self._persist_capability_request(plan, proposal, str(exc))
-                rejected.append(CandidateResult(proposal.id, proposal.fingerprint, CandidateStage.BLOCKED, reason=str(exc)))
+                rejected.append(
+                    CandidateResult(
+                        proposal.id, proposal.fingerprint, CandidateStage.BLOCKED, reason=str(exc)
+                    )
+                )
                 continue
             fit_count += 1
             validation_trials += 1
-            validation_value = self._primary_metric(candidate_spec, model, validation_rows, calibration=calibration)
-            improvement = self._improvement(candidate_spec.evaluation.primary.direction, baseline_validation, validation_value)
+            validation_value = self._primary_metric(
+                candidate_spec, model, validation_rows, calibration=calibration
+            )
+            improvement = self._improvement(
+                candidate_spec.evaluation.primary.direction, baseline_validation, validation_value
+            )
             if improvement + 1e-15 < plan.safeguards.minimum_improvement:
-                rejected.append(CandidateResult(
-                    proposal.id, proposal.fingerprint, CandidateStage.REJECTED,
-                    validation_metric=validation_value,
-                    baseline_validation_metric=baseline_validation,
-                    validation_count=len(validation_rows),
-                    reason="candidate failed minimum validation improvement",
-                ))
+                rejected.append(
+                    CandidateResult(
+                        proposal.id,
+                        proposal.fingerprint,
+                        CandidateStage.REJECTED,
+                        validation_metric=validation_value,
+                        baseline_validation_metric=baseline_validation,
+                        validation_count=len(validation_rows),
+                        reason="candidate failed minimum validation improvement",
+                    )
+                )
                 continue
-            staged.append((proposal, candidate_spec, model, validation_value, calibration, calibration_id))
+            staged.append(
+                (proposal, candidate_spec, model, validation_value, calibration, calibration_id)
+            )
 
         direction = baseline_spec.evaluation.primary.direction
         staged.sort(key=lambda row: row[3], reverse=direction == MetricDirection.MAXIMIZE)
         shortlist = staged[: plan.budget.maximum_oos_candidates]
         results = list(rejected)
         oos_trials = 0
-        for proposal, candidate_spec, model, validation_value, calibration, calibration_id in shortlist:
+        for (
+            proposal,
+            candidate_spec,
+            model,
+            validation_value,
+            calibration,
+            calibration_id,
+        ) in shortlist:
             oos_trials += 1
-            oos_value = self._primary_metric(candidate_spec, model, test_rows, calibration=calibration)
+            oos_value = self._primary_metric(
+                candidate_spec, model, test_rows, calibration=calibration
+            )
             improvement = self._improvement(direction, baseline_oos, oos_value)
             accepted = improvement + 1e-15 >= plan.safeguards.minimum_improvement
             registered_id = None
             if accepted and self.registry is not None and calibration is None:
-                registered_id = self._register_candidate(candidate_spec, model, plan.data_source_id, proposal)
-            results.append(CandidateResult(
-                proposal.id,
-                proposal.fingerprint,
-                CandidateStage.ACCEPTED if accepted else CandidateStage.REJECTED,
-                validation_metric=validation_value,
-                oos_metric=oos_value,
-                baseline_validation_metric=baseline_validation,
-                baseline_oos_metric=baseline_oos,
-                validation_count=len(validation_rows),
-                oos_count=len(test_rows),
-                registered_model_id=registered_id,
-                calibration_id=calibration_id,
-                reason="sealed research OOS gate passed" if accepted else "sealed research OOS gate failed",
-            ))
+                registered_id = self._register_candidate(
+                    candidate_spec, model, plan.data_source_id, proposal
+                )
+            results.append(
+                CandidateResult(
+                    proposal.id,
+                    proposal.fingerprint,
+                    CandidateStage.ACCEPTED if accepted else CandidateStage.REJECTED,
+                    validation_metric=validation_value,
+                    oos_metric=oos_value,
+                    baseline_validation_metric=baseline_validation,
+                    baseline_oos_metric=baseline_oos,
+                    validation_count=len(validation_rows),
+                    oos_count=len(test_rows),
+                    registered_model_id=registered_id,
+                    calibration_id=calibration_id,
+                    reason="sealed research OOS gate passed"
+                    if accepted
+                    else "sealed research OOS gate failed",
+                )
+            )
         report = ResearchIterationReport(
             id=plan.id,
             plan_id=plan.id,
@@ -174,8 +225,9 @@ class ResearchService:
         self.store.write_report(report)
         return report
 
-
-    def _persist_capability_request(self, plan: ResearchPlan, proposal: CandidateProposal, reason: str) -> None:
+    def _persist_capability_request(
+        self, plan: ResearchPlan, proposal: CandidateProposal, reason: str
+    ) -> None:
         if "missing capability:" not in reason:
             return
         capability = reason.split("missing capability:", 1)[1].strip()
@@ -200,40 +252,84 @@ class ResearchService:
         }
         write_yaml_artifact(path, artifact_type="automo.capability_request", payload=payload)
 
-    def _generate_candidates(self, baseline_id: str, diagnosis: str, findings: Sequence[str], space: ResearchSearchSpace) -> tuple[CandidateProposal, ...]:
-        allowed = _DIAGNOSIS_ORDER.get(diagnosis, (InterventionKind.MODEL, InterventionKind.FEATURE_SET, InterventionKind.CALIBRATION, InterventionKind.PARAMETERS))
+    def _generate_candidates(
+        self, baseline_id: str, diagnosis: str, findings: Sequence[str], space: ResearchSearchSpace
+    ) -> tuple[CandidateProposal, ...]:
+        allowed = _DIAGNOSIS_ORDER.get(
+            diagnosis,
+            (
+                InterventionKind.MODEL,
+                InterventionKind.FEATURE_SET,
+                InterventionKind.CALIBRATION,
+                InterventionKind.PARAMETERS,
+            ),
+        )
         values: list[ResearchIntervention] = []
         if InterventionKind.CALIBRATION in allowed:
-            values.extend(ResearchIntervention(InterventionKind.CALIBRATION, {"calibrator_id": value}) for value in space.calibrator_ids)
+            values.extend(
+                ResearchIntervention(InterventionKind.CALIBRATION, {"calibrator_id": value})
+                for value in space.calibrator_ids
+            )
         if InterventionKind.FEATURE_SET in allowed:
-            values.extend(ResearchIntervention(InterventionKind.FEATURE_SET, {"feature_set_id": value}) for value in space.feature_set_ids)
+            values.extend(
+                ResearchIntervention(InterventionKind.FEATURE_SET, {"feature_set_id": value})
+                for value in space.feature_set_ids
+            )
         if InterventionKind.MODEL in allowed:
-            values.extend(ResearchIntervention(InterventionKind.MODEL, {"model_spec_id": value}) for value in space.model_spec_ids if value != baseline_id)
+            values.extend(
+                ResearchIntervention(InterventionKind.MODEL, {"model_spec_id": value})
+                for value in space.model_spec_ids
+                if value != baseline_id
+            )
         if InterventionKind.PARAMETERS in allowed:
             for name in sorted(space.parameter_choices):
                 for value in space.parameter_choices[name]:
-                    values.append(ResearchIntervention(InterventionKind.PARAMETERS, {"parameter": name, "value": value}))
+                    values.append(
+                        ResearchIntervention(
+                            InterventionKind.PARAMETERS, {"parameter": name, "value": value}
+                        )
+                    )
         proposals = []
         for index, intervention in enumerate(values, 1):
-            proposals.append(CandidateProposal(
-                id=f"CANDIDATE-{index:04d}", baseline_model_spec_id=baseline_id, intervention=intervention,
-                rationale=(f"Diagnosis {diagnosis} permits {intervention.kind.value} intervention.", *tuple(findings)),
-                expected_effect=f"Improve the committed primary metric through {intervention.kind.value}.",
-                falsification=("Fails the committed minimum validation improvement.", "Fails the sealed research-OOS improvement gate."),
-                priority=index,
-            ))
+            proposals.append(
+                CandidateProposal(
+                    id=f"CANDIDATE-{index:04d}",
+                    baseline_model_spec_id=baseline_id,
+                    intervention=intervention,
+                    rationale=(
+                        f"Diagnosis {diagnosis} permits {intervention.kind.value} intervention.",
+                        *tuple(findings),
+                    ),
+                    expected_effect=f"Improve the committed primary metric through {intervention.kind.value}.",
+                    falsification=(
+                        "Fails the committed minimum validation improvement.",
+                        "Fails the sealed research-OOS improvement gate.",
+                    ),
+                    priority=index,
+                )
+            )
         return tuple(proposals)
 
-    def _fit_candidate(self, proposal: CandidateProposal, baseline: ModelSpec, fit_rows: Sequence[Mapping[str, Any]]):
+    def _fit_candidate(
+        self,
+        proposal: CandidateProposal,
+        baseline: ModelSpec,
+        fit_rows: Sequence[Mapping[str, Any]],
+    ):
         kind = proposal.intervention.kind
         values = proposal.intervention.values
         calibration_id = None
         if kind == InterventionKind.MODEL:
             spec = self.runtime.model_specs[str(values["model_spec_id"])]
         elif kind == InterventionKind.FEATURE_SET:
-            spec = replace(baseline, id=f"{baseline.id}__{proposal.id}", feature_set=str(values["feature_set_id"]))
+            spec = replace(
+                baseline,
+                id=f"{baseline.id}__{proposal.id}",
+                feature_set=str(values["feature_set_id"]),
+            )
         elif kind == InterventionKind.PARAMETERS:
-            params = dict(baseline.params); params[str(values["parameter"])] = values["value"]
+            params = dict(baseline.params)
+            params[str(values["parameter"])] = values["value"]
             spec = replace(baseline, id=f"{baseline.id}__{proposal.id}", params=params)
         elif kind == InterventionKind.CALIBRATION:
             spec = baseline
@@ -259,8 +355,12 @@ class ResearchService:
             raise ResearchError(f"missing capability: model trainer {spec.implementation}") from exc
         result = trainer.fit(
             TrainingRequest(
-                model_spec=spec, rows=tuple(rows), inputs=self.runtime.prepare_inputs(spec, rows),
-                objective=spec.objective, services=self.runtime.plugin.services, partition_id="research_fit",
+                model_spec=spec,
+                rows=tuple(rows),
+                inputs=self.runtime.prepare_inputs(spec, rows),
+                objective=spec.objective,
+                services=self.runtime.plugin.services,
+                partition_id="research_fit",
             )
         )
         predictor = result.predictor
@@ -268,16 +368,29 @@ class ResearchService:
 
     def _materialize_and_target(self, spec: ModelSpec, rows: Sequence[Mapping[str, Any]]):
         if spec.feature_set is None or not spec.objective.target:
-            raise ResearchError("calibration currently requires a numeric target and feature-set model")
+            raise ResearchError(
+                "calibration currently requires a numeric target and feature-set model"
+            )
         feature_set = self.runtime.feature_sets[spec.feature_set]
         materialized = self.runtime.features.materialize(rows, feature_set)
         target = tuple(float(row[spec.objective.target]) for row in rows)
         return materialized, target
 
-    def _primary_metric(self, spec: ModelSpec, model: Any, rows: Sequence[Mapping[str, Any]], *, calibration: Any | None = None) -> float:
+    def _primary_metric(
+        self,
+        spec: ModelSpec,
+        model: Any,
+        rows: Sequence[Mapping[str, Any]],
+        *,
+        calibration: Any | None = None,
+    ) -> float:
         inputs = self.runtime.prepare_inputs(spec, rows)
         request = PredictionRequest(
-            model_spec=spec, rows=tuple(rows), inputs=inputs, services=self.runtime.plugin.services, partition_id="research_evaluation",
+            model_spec=spec,
+            rows=tuple(rows),
+            inputs=inputs,
+            services=self.runtime.plugin.services,
+            partition_id="research_evaluation",
         )
         try:
             output = model.predict(request)
@@ -286,38 +399,66 @@ class ResearchService:
         if not isinstance(output, ModelOutputBatch):
             output = ModelOutputBatch(tuple(output))
         if calibration is not None:
-            output = ModelOutputBatch(tuple(calibration.transform(output.values)), output_name=output.output_name)
+            output = ModelOutputBatch(
+                tuple(calibration.transform(output.values)), output_name=output.output_name
+            )
         context = EvaluationContext(
-            model_spec=spec, rows=tuple(rows), outputs=output, objective=spec.objective,
-            inputs=inputs, services=self.runtime.plugin.services, partition_id="research_evaluation",
+            model_spec=spec,
+            rows=tuple(rows),
+            outputs=output,
+            objective=spec.objective,
+            inputs=inputs,
+            services=self.runtime.plugin.services,
+            partition_id="research_evaluation",
         )
         metrics = self.runtime.evaluate_context(spec, context)
         return float(metrics[spec.evaluation.primary.id])
 
-    def _register_candidate(self, spec: ModelSpec, model: Any, data_source_id: str, proposal: CandidateProposal) -> str:
+    def _register_candidate(
+        self, spec: ModelSpec, model: Any, data_source_id: str, proposal: CandidateProposal
+    ) -> str:
         trainer = self.runtime.trainer_for(spec.implementation)
         codec = getattr(trainer, "artifact_codec", None)
         if codec is None:
             raise ResearchError(f"missing capability: artifact codec for {spec.implementation}")
         snapshot = self.runtime.data_sources[data_source_id].snapshot()
-        from automo.registry import TrainingProvenance
         import platform
+
+        from automo.registry import TrainingProvenance
+
         provenance = TrainingProvenance(
-            data_source_id=data_source_id, data_snapshot_id=snapshot.id, data_snapshot_hash=snapshot.content_hash,
-            feature_set_id=spec.feature_set, model_spec_id=spec.id, objective_id=spec.objective.id,
-            runner_implementation=spec.implementation, python_version=platform.python_version(), seed=None,
+            data_source_id=data_source_id,
+            data_snapshot_id=snapshot.id,
+            data_snapshot_hash=snapshot.content_hash,
+            feature_set_id=spec.feature_set,
+            model_spec_id=spec.id,
+            objective_id=spec.objective.id,
+            runner_implementation=spec.implementation,
+            python_version=platform.python_version(),
+            seed=None,
             code_revision=self.runtime._git_revision(),
         )
         manifest = self.registry.register_model(
-            model, implementation=spec.implementation, model_spec_id=spec.id, objective_id=spec.objective.id,
-            feature_set_id=spec.feature_set, provenance=provenance, codec=codec,
+            model,
+            implementation=spec.implementation,
+            model_spec_id=spec.id,
+            objective_id=spec.objective.id,
+            feature_set_id=spec.feature_set,
+            provenance=provenance,
+            codec=codec,
         )
         return manifest.id
 
     @staticmethod
-    def _rows(rows: Sequence[Mapping[str, Any]], indices: Sequence[int]) -> tuple[Mapping[str, Any], ...]:
+    def _rows(
+        rows: Sequence[Mapping[str, Any]], indices: Sequence[int]
+    ) -> tuple[Mapping[str, Any], ...]:
         return tuple(rows[index] for index in indices)
 
     @staticmethod
     def _improvement(direction: MetricDirection, baseline: float, candidate: float) -> float:
-        return (candidate - baseline) if direction == MetricDirection.MAXIMIZE else (baseline - candidate)
+        return (
+            (candidate - baseline)
+            if direction == MetricDirection.MAXIMIZE
+            else (baseline - candidate)
+        )
