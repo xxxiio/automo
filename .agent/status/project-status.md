@@ -11,7 +11,7 @@ status: current
 
 ## Current state
 
-MILESTONE-0013 is active. The `0.3.0a1` public-alpha candidate includes completed MILESTONE-0014 through MILESTONE-0016 research governance, guidance completeness, project-agent composition, and consumer-compatibility hardening. The current release-hardening task removes tox: local pre-commit runs pytest through Poetry and connected CI owns the Python 3.11–3.13 compatibility matrix.
+MILESTONE-0013 is active. Automo `0.3.0a1` now uses uv as the single canonical development/environment/build workflow. TASK-0033 removed the active Poetry CLI/Core contract, moved development/documentation dependencies to standardized dependency groups, switched packaging to `uv_build`, and switched local/CI/release execution to uv.
 
 ## Current milestone
 
@@ -19,44 +19,34 @@ MILESTONE-0013 — Public alpha hardening.
 
 ## Recently completed
 
-- Completed TASK-0022: unified local/CI full-repository pre-commit execution and moved Python 3.11–3.13 unit tests into the gate through tox.
-- Completed TASK-0021: removed uv from canonical developer/GitHub workflows and restored Poetry-only development/CI.
-- Completed TASK-0020: restored Poetry Core packaging, pyproject-owned versioning, and PPW-style developer bootstrap.
-
-- Completed MILESTONE-0016: GetDone-style `.project-agent/` research extensions, composition locks, generalized provenance/pools/selectors, state-schema checks, agent-plan conformance, and xihbm compatibility evidence.
-
-- Completed MILESTONE-0015: deeper diagnosis, multiple-testing/selection-bias, early-stopping, meta-model ablation/OOF guidance, adherence gates, and a sequential research walkthrough.
-- Completed MILESTONE-0014: `.automo/` research governance, `automo guidance`, and bounded GetDone capability handoff.
-
-- Removed legacy package/CLI identity and generated source-tree artifacts.
-- Added versioned public persistence envelopes and one package-version source.
-- Defined/tested public extension imports and security trust boundaries.
-- Added fresh-project scaffolding, six synthetic onboarding examples, and controlled CLI error tests.
-- Verified wheel and sdist clean installs including fresh init/validate/doctor smoke workflows.
+- Completed TASK-0033: uv-only developer, CI, documentation, health, and package-build workflow.
+- Completed TASK-0032: full-repository Ruff auto-fix scope aligned between local pre-commit and CI.
+- Completed TASK-0030: tox removed; pytest is the direct unit-test gate.
+- Completed MILESTONE-0014 through MILESTONE-0016 research governance/guidance/compatibility work.
 
 ## In progress
 
-- Refreshing wheel/sdist clean-install evidence for the Poetry Core candidate, plus connected evidence that the canonical full-repository pre-commit gate (including pytest plus Python 3.11–3.13 CI tests) passes.
+- Generate and commit `uv.lock` in a connected checkout, then tighten canonical sync/run commands to `--locked`.
+- Refresh connected wheel/sdist, smoke, full pre-commit, and Python 3.11/3.12/3.13 evidence.
 
 ## Blocked
 
-- Local complete pre-commit execution is unavailable because this environment cannot resolve/install remote hook environments from the network. Publication is intentionally gated on connected CI instead of waiving the check.
+- This execution sandbox cannot resolve PyPI, so `uv lock`, dependency-backed `uv build`, Ruff, and complete pre-commit cannot be executed here.
 
 ## Key decisions
 
-- Pre-commit is the canonical local repository-quality gate and includes pytest through Poetry. GitHub runs the full pre-commit gate plus a separate Python 3.11/3.12/3.13 pytest compatibility matrix.
-- Public examples remain synthetic and domain-neutral.
-- Agent research governance, guidance completeness, project-specific extension composition, and consumer compatibility are explicit public-alpha blockers and are now locally satisfied through MILESTONE-0016.
+- uv owns the project environment, dependency resolution, Python selection, command execution, and build frontend.
+- `uv_build` is the PEP 517 build backend.
+- Pre-commit remains the repository-quality orchestrator; its pytest hook executes `uv run pytest -q`.
+- GitHub uses `astral-sh/setup-uv` and retains explicit Python 3.11/3.12/3.13 compatibility jobs.
+- No tox or Poetry layer remains in the active workflow.
 
 ## Project health
 
-- Local pytest passes on the available interpreter; connected pytest execution across Python 3.11, 3.12, and 3.13 remains pending.
-- Previous setuptools wheel/sdist evidence is intentionally stale after TASK-0020; current Poetry Core package build awaits connected dependency provisioning.
-- GetDone 1.1.2 validates 27 managed files with 0 errors and 10 expected project-owned warnings.
-
-## Risks
-
-- CI may reveal lint/format or Python-version-specific issues that cannot be reproduced in this offline container.
+- Local pytest: 132 passed on the available interpreter after TASK-0033.
+- `compileall`: passed.
+- `scripts/source_check.py`: passed.
+- Connected uv lock/build/pre-commit and cross-version evidence remain pending.
 
 ## Remaining milestones
 
@@ -64,4 +54,4 @@ MILESTONE-0013 — Public alpha hardening.
 
 ## Next deterministic step
 
-NEXT-0022 — run the connected canonical full-repository pre-commit gate and Poetry Core package/smoke checks, then record EC-010 through EC-013 evidence before publication.
+NEXT-0033 — generate/commit `uv.lock` in a connected checkout, tighten gates to `--locked`, then run the complete connected release evidence sequence.

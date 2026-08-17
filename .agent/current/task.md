@@ -17,7 +17,7 @@ Prepare and verify the Automo `0.3.0a1` public-alpha release candidate, leaving 
 
 ## Current behaviour
 
-The release candidate is clean, versioned, documented, and passes local source/tests after TASK-0020; Poetry Core wheel/sdist build-install evidence must be refreshed in connected CI because Poetry Core cannot be provisioned in this sandbox.
+The release candidate is clean, versioned, documented, and passes local source/tests after TASK-0020; uv_build wheel/sdist build-install evidence must be refreshed in connected CI because uv_build cannot be provisioned in this sandbox.
 
 ## Desired behaviour
 
@@ -41,10 +41,10 @@ All fourteen public-alpha exit criteria have reproducible evidence before public
 
 ## Acceptance criteria
 
-- [ ] AC-001: Current Poetry Core release candidate passes source/tests/examples/wheel/sdist gates.
+- [ ] AC-001: Current uv_build release candidate passes source/tests/examples/wheel/sdist gates.
 - [x] AC-002: Public persistence/API/security/onboarding contracts are explicit.
-- [x] AC-003: Local pre-commit runs repository hygiene, Ruff, and pytest through Poetry; connected CI separately runs the same pytest suite on Python 3.11, 3.12, and 3.13.
-- [ ] AC-004: Connected CI confirms Poetry Core package/smoke, Python 3.11–3.13, and the canonical complete pre-commit quality job pass.
+- [x] AC-003: Local pre-commit runs repository hygiene, Ruff, and pytest through uv; connected CI separately runs the same pytest suite on Python 3.11, 3.12, and 3.13.
+- [ ] AC-004: Connected CI confirms uv_build package/smoke, Python 3.11–3.13, and the canonical complete pre-commit quality job pass.
 
 ## Validation
 

@@ -4,7 +4,7 @@ Automo uses GitHub Actions for continuous integration, PyPI publishing, and docu
 
 ## Continuous integration
 
-`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests. Its quality job runs the canonical full-repository pre-commit gate, while a separate Python 3.11/3.12/3.13 matrix runs `poetry run pytest -q` under each supported interpreter. Packaging/smoke checks and strict documentation builds remain separate jobs. Successful `main` CI also deploys that exact documentation build to GitHub Pages.
+`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests. Its quality job runs the canonical full-repository pre-commit gate, while a separate Python 3.11/3.12/3.13 matrix uses uv to run `uv run pytest -q` under each supported interpreter. Packaging/smoke checks and strict documentation builds remain separate jobs. Successful `main` CI also deploys that exact documentation build to GitHub Pages.
 
 ## PyPI releases
 

@@ -30,8 +30,8 @@
 
 - The package and CLI now use the Automo identity exclusively.
 - Package version metadata has one source of truth.
-- Restored the PPW-derived Poetry Core packaging backend while retaining modern PEP 621 project metadata and Poetry-managed development/test environments.
-- Added PPW-style one-command developer bootstrap that synchronizes dev dependencies and installs/pre-provisions the Git pre-commit hook.
+- Switched the active development, CI, dependency, Python-environment, and build workflow to uv; packaging now uses the `uv_build` backend with modern PEP 621 metadata.
+- Simplified one-command developer bootstrap to `uv sync` plus standard pre-commit hook installation.
 - Pre-commit is the canonical repository-quality gate; it combines repository/configuration hygiene with Ruff lint/format, and CI runs the same hook configuration.
 - Runtime-generated runs, recommendations, build outputs, and local egg-info are excluded from the clean source tree/release artifacts.
 - Wheel and sdist clean-install checks are release gates.

@@ -1,6 +1,6 @@
 [build-system]
-requires = ["poetry-core>=2.0,<3"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.12.0,<0.13"]
+build-backend = "uv_build"
 
 [project]
 name = "automo"
@@ -29,17 +29,15 @@ getdone = ["getdone-dev>=1.1.2,<2"]
 [project.scripts]
 automo = "automo.cli:main"
 
-[tool.poetry]
-packages = [{ include = "automo", from = "src" }]
-
-[tool.poetry.group.dev.dependencies]
-pytest = ">=8"
-ruff = ">=0.16,<0.17"
-pre-commit = ">=4.6,<5"
-build = ">=1.2,<2"
-
-[tool.poetry.group.docs.dependencies]
-zensical = "*"
+[dependency-groups]
+dev = [
+  "pre-commit>=4.6,<5",
+  "pytest>=8",
+  "ruff>=0.16,<0.17",
+]
+docs = [
+  "zensical",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

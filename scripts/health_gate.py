@@ -29,12 +29,10 @@ def _smoke_install(artifact: Path, *, label: str) -> None:
         run(
             f"{label} install",
             [
-                sys.executable,
-                "-m",
+                "uv",
                 "pip",
                 "install",
                 "--no-deps",
-                "--no-build-isolation",
                 "--target",
                 str(target),
                 str(artifact),
@@ -56,7 +54,7 @@ def _smoke_install(artifact: Path, *, label: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Canonical Automo offline release health gate.")
+    parser = argparse.ArgumentParser(description="Canonical Automo release health gate.")
     parser.add_argument("--keep-dist", action="store_true", help="Keep built artifacts in dist/.")
     parser.add_argument(
         "--skip-tests", action="store_true", help="Skip pytest when it already ran in CI."
@@ -79,19 +77,7 @@ def main() -> int:
     for example in sorted((ROOT / "examples").glob("*/example.py")):
         run(f"example {example.parent.name}", [sys.executable, str(example)], env=examples_env)
 
-    run(
-        "wheel and sdist build",
-        [
-            sys.executable,
-            "-m",
-            "build",
-            "--wheel",
-            "--sdist",
-            "--no-isolation",
-            "--outdir",
-            str(dist),
-        ],
-    )
+    run("wheel and sdist build", ["uv", "build"])
 
     wheels = sorted(dist.glob("automo-*.whl"))
     sdists = sorted(dist.glob("automo-*.tar.gz"))

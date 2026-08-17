@@ -55,3 +55,11 @@ def test_source_check_tolerates_ignored_build_metadata() -> None:
         marker.unlink(missing_ok=True)
         with suppress(OSError):
             egg_info.rmdir()
+
+
+def test_health_gate_uses_uv_for_build_and_smoke_install() -> None:
+    text = (ROOT / "scripts" / "health_gate.py").read_text(encoding="utf-8")
+    assert '["uv", "build"]' in text
+    assert '"uv"' in text and '"pip"' in text and '"install"' in text
+    assert "--no-isolation" not in text
+    assert "--no-build-isolation" not in text

@@ -13,7 +13,7 @@ status: current
 ## Environment prerequisites
 
 - Python 3.11 or newer.
-- Poetry for development dependency management, test execution, documentation tooling, and package builds.
+- uv for Python/project environment management, dependency resolution, test execution, documentation tooling, and package builds.
 - `pip` remains sufficient for installing the built standalone package.
 - No database, network service, credential, or GetDone installation is required for the standalone health gate.
 - GetDone is optional and is installed only through the `getdone` extra.
@@ -32,21 +32,21 @@ For a normal developer clone, run the PPW-style one-command bootstrap:
 python scripts/init_dev.py
 ```
 
-Matching PPW, the bootstrap installs `pre-commit` with the current Python, runs `pre-commit install`, installs Poetry, and then runs `poetry install --with dev`. Poetry owns the project environment; pre-commit creates `.git/hooks/pre-commit`.
+The bootstrap requires uv, runs `uv sync`, and installs the standard hook with `uv run pre-commit install`. uv owns the project environment; pre-commit creates `.git/hooks/pre-commit`.
 
 Ordinary `git commit` and GitHub Actions both run the same full-repository gate. The explicit command is:
 
 ```bash
-poetry run pre-commit run --all-files --show-diff-on-failure
+uv run pre-commit run --all-files --show-diff-on-failure
 ```
 
 Documentation tooling is intentionally separate from the core development gate:
 
 ```bash
-poetry install --with docs
-poetry run zensical serve
+uv sync --group docs
+uv run --group docs zensical serve
 # optional static build check
-poetry run zensical build
+uv run --group docs zensical build
 ```
 
 ## Format
@@ -86,7 +86,7 @@ A dedicated third-party type checker is not configured for the 0.1 release bound
 Unit tests are part of the canonical local pre-commit gate through pytest:
 
 ```bash
-poetry run pytest -q
+uv run pytest -q
 ```
 
 Tox owns Python 3.11, 3.12, and 3.13 environments and runs `pytest -q` in each. `skip_missing_interpreters = false`, so missing supported interpreters fail the gate instead of being silently skipped. Focused pytest commands may still be used for troubleshooting, but they are not completion evidence.
@@ -94,7 +94,7 @@ Tox owns Python 3.11, 3.12, and 3.13 environments and runs `pytest -q` in each. 
 Focused troubleshooting example:
 
 ```bash
-poetry run pytest -q tests/test_execution.py
+uv run pytest -q tests/test_execution.py
 ```
 
 ## Integration and end-to-end tests
@@ -144,5 +144,5 @@ These tests cover protected-evidence hashes, rollback, bounded trial execution, 
 ## Unavailable checks
 
 - The complete pre-commit gate requires its remote hook environments. If the current environment is offline and those environments are not already cached, `scripts/source_check.py` remains the dependency-free fallback for local source-hygiene evidence; this does not satisfy EC-013.
-- Zensical is documentation tooling, not a release blocker. Run `poetry run zensical serve` or `poetry run zensical build` after installing the docs group when documentation dependencies are available.
+- Zensical is documentation tooling, not a release blocker. Run `uv run --group docs zensical serve` or `uv run --group docs zensical build` after installing the docs group when documentation dependencies are available.
 - A standalone GetDone project-validator executable is not bundled with Automo. GetDone-specific validation is available only when the optional integration package supplies it.

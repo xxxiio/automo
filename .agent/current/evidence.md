@@ -18,10 +18,10 @@ TASK-0016 — Prepare and verify the Automo 0.3.0a1 public-alpha release candida
 
 | Criterion ID | Status | Evidence |
 |---|---|---|
-| AC-001 | not-run | 130-test suite/source checks pass, but Poetry Core wheel/sdist evidence is stale until the current backend is built in connected CI |
+| AC-001 | not-run | 130-test suite/source checks pass, but uv_build wheel/sdist evidence is stale until the current backend is built in connected CI |
 | AC-002 | pass | persistence/API/security/onboarding files and tests |
-| AC-003 | pass | `.github/workflows/ci.yml` and local development execute the same complete pre-commit configuration; pre-commit runs `poetry run pytest -q` on the project Python and CI separately proves Python 3.11–3.13 compatibility; `scripts/init_dev.py` is stdlib-only before bootstrapping pre-commit/Poetry |
-| AC-004 | not-run | connected rerun must prove Poetry Core package/smoke, Python 3.11–3.13, and complete pre-commit on the corrected candidate |
+| AC-003 | pass | `.github/workflows/ci.yml` and local development execute the same complete pre-commit configuration; pre-commit runs `uv run pytest -q` on the project Python and CI separately proves Python 3.11–3.13 compatibility; `scripts/init_dev.py` is stdlib-only before bootstrapping uv/pre-commit |
+| AC-004 | not-run | connected rerun must prove uv_build package/smoke, Python 3.11–3.13, and complete pre-commit on the corrected candidate |
 
 ## Quality gate evidence
 
@@ -29,15 +29,15 @@ TASK-0016 — Prepare and verify the Automo 0.3.0a1 public-alpha release candida
 |---|---|---|---|
 | Tests | pass | `PYTHONPATH=src python -m pytest -q` | 130 passed |
 | Compilation | pass | `python -m compileall -q src tests scripts examples` | passed |
-| Wheel/sdist | not-run | `python scripts/health_gate.py --keep-dist` | current Poetry Core backend cannot be provisioned in the offline sandbox; previous setuptools artifacts are not accepted as evidence |
-| Release health | not-run | `python scripts/health_gate.py --skip-tests --keep-dist` | build phase awaits Poetry Core/build dependencies in connected CI; source/tests/compile portions pass locally |
+| Wheel/sdist | not-run | `python scripts/health_gate.py --keep-dist` | current uv_build backend cannot be resolved in the offline sandbox; previous setuptools artifacts are not accepted as evidence |
+| Release health | not-run | `python scripts/health_gate.py --skip-tests --keep-dist` | build phase awaits uv_build resolution in a connected environment; source/tests/compile portions pass locally |
 | Pre-commit quality gate | not-run | `.pre-commit-config.yaml` / CI | PPW-derived hygiene + Ruff configuration is locally inspected/tested; remote hook environments cannot be provisioned offline |
 | Clean Git simulation | pass | initialize Git, `git add -A`, create ignored `src/automo.egg-info`, run source check and pytest | 20 fixture files tracked, root `runs/` ignored, source-check passed, compatibility regression remains covered |
 | GetDone 1.1.2 | pass | validator command | 27 managed files, 0 errors, 10 expected warnings |
 
 ## Checks not run
 
-- Poetry Core wheel/sdist build-install smoke for the current backend.
+- uv_build wheel/sdist build-install smoke for the current backend.
 - Connected GitHub Actions rerun on the corrected commit.
 
 ## Waivers
