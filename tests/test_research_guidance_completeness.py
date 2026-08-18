@@ -79,15 +79,15 @@ def test_documented_automo_commands_exist() -> None:
 def test_multi_iteration_guidance_walkthrough_is_bounded_and_complete() -> None:
     path = ROOT / "examples/research-guidance/walkthrough.yaml"
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    milestones = data["milestones"]
-    assert len(milestones) >= 3
-    assert {item["conclusion"] for item in milestones} >= {"accepted", "rejected"}
-    for item in milestones:
+    hypotheses = data["hypotheses"]
+    assert len(hypotheses) >= 3
+    assert {item["conclusion"] for item in hypotheses} >= {"supported", "rejected"}
+    for item in hypotheses:
         plan = item["plan"]
         assert plan["maximum_candidates"] >= len(item["experiments"])
         assert plan["maximum_oos_candidates"] >= 0
         assert plan["materiality_threshold"] > 0
-        assert item["next_step"]
+        assert item["project_implication"]
     forbidden = "\n".join(data["forbidden_actions"]).lower()
     assert "sealed oos" in forbidden
     assert "failed candidates" in forbidden
@@ -111,5 +111,5 @@ def test_research_guidance_example_runs() -> None:
         text=True,
     )
     assert completed.returncode == 0, completed.stderr
-    assert "R001: rejected" in completed.stdout
-    assert "R002: accepted" in completed.stdout
+    assert "H001: rejected" in completed.stdout
+    assert "H002: supported" in completed.stdout

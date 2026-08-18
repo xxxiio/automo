@@ -147,14 +147,14 @@ Advanced stages are grouped under commands including `automo experiment`, `autom
 
 ## Artifacts and compatibility
 
-Public registry, refresh, pool, and bounded-research artifacts written by `0.3.0a1` contain:
+Public registry, refresh, pool, and bounded-research artifacts written by `0.3.0a2` contain:
 
 ```yaml
 artifact_type: automo.example
 schema_version: 1
 ```
 
-This gives future releases an explicit migration boundary. The alpha Python API can still evolve; use the contracts documented in `public-api.md` rather than concrete filesystem service classes where possible.
+Automo treats these schemas as current contracts. Incompatible persisted state is rejected rather than migrated implicitly. The alpha Python API can still evolve; use the contracts documented in `public-api.md` rather than concrete filesystem service classes where possible.
 
 ## Troubleshooting
 

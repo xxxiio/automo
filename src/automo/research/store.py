@@ -28,6 +28,7 @@ class FilesystemResearchStore:
         directory.mkdir(parents=True)
         payload = {
             "id": plan.id,
+            "provenance": plan.provenance.as_dict() if plan.provenance else None,
             "baseline_model_spec_id": plan.baseline_model_spec_id,
             "data_source_id": plan.data_source_id,
             "split_strategy_id": plan.split_strategy_id,
@@ -121,8 +122,19 @@ class FilesystemResearchStore:
                     priority=int(item.get("priority", 0)),
                 )
             )
+        from automo.governance import ResearchProvenance
+
+        provenance_raw = raw.get("provenance")
+        provenance = None
+        if provenance_raw:
+            provenance = ResearchProvenance(
+                program_id=provenance_raw["program"],
+                hypothesis_id=provenance_raw["hypothesis"],
+                experiment_id=provenance_raw.get("experiment"),
+            )
         return ResearchPlan(
             id=raw["id"],
+            provenance=provenance,
             baseline_model_spec_id=raw["baseline_model_spec_id"],
             data_source_id=raw["data_source_id"],
             split_strategy_id=raw["split_strategy_id"],

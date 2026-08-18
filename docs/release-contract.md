@@ -1,6 +1,6 @@
-# Automo 0.3.0a1 public alpha contract
+# Automo 0.3.0a2 public alpha contract
 
-`0.3.0a1` is the first intentionally public Automo alpha.
+`0.3.0a2` is the current public Automo alpha, extending the initial release with program/model/hypothesis governance and immutable model-composition research artifacts.
 
 ## Supported use cases
 
@@ -10,6 +10,8 @@
 - model pools and data-iteration refresh workflows;
 - bounded automated research with explicit budgets and OOS gates;
 - composable model graphs and leakage-safe first-level stacking/meta-model training;
+- logical model candidates with exact upstream candidate composition;
+- controlled composition/ablation experiments for incremental meta-model value;
 - datasets using time, ordered IDs, groups, stable hashes, or predefined partitions.
 
 ## Not claimed
@@ -30,4 +32,4 @@ The release candidate must pass the canonical full-repository pre-commit gate lo
 
 ## Agent research governance
 
-The public alpha includes packaged agent-facing research guidance, `.automo/` milestone/plan-mode governance, and an optional bounded GetDone capability handoff. GetDone development state remains separate under `.agent/`.
+The public alpha includes packaged agent-facing research guidance, `.automo/` program/model/hypothesis governance, and an optional bounded GetDone capability handoff. GetDone development state remains separate under `.agent/`.

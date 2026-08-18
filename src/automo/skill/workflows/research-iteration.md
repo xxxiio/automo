@@ -4,15 +4,22 @@
 Use for every governed Automo research iteration.
 
 ## Procedure
-1. Read `.automo/project.yaml`, `.automo/current/milestone.yaml`, and `.automo/current/next-step.yaml`.
-2. If project mode is `plan`, do not fit models or inspect sealed OOS; perform only planning work.
-3. When research mode is active, execute exactly one committed bounded step.
-4. Record every candidate, exposure, metric, failure, and capability blocker through Automo artifacts.
-5. After evidence is available, decide accepted, rejected, inconclusive, or invalid without rewriting prior evidence.
-6. Emit exactly one next research step or conclude the milestone.
+1. Read `.automo/project.yaml`, `.automo/research-program/program.yaml`, the model graph, and the active hypothesis.
+2. Treat GetDone/project roadmap material as external prioritization context only; do not reproduce milestone state in Automo.
+3. Execute research only when a falsifiable hypothesis is active.
+4. Bind every research plan, experiment, capability request, evidence artifact, and conclusion to program/hypothesis/experiment provenance.
+5. Evaluate the intervention at the hypothesis's committed depth: validity, local, parent, or system.
+6. Preserve every candidate, exposure, metric, failure, and capability blocker through Automo artifacts.
+7. Conclude the hypothesis as supported, rejected, or inconclusive when evidence is sufficient; otherwise choose the next bounded experiment for the same hypothesis.
+
+## Model-structure rules
+- Independent models may coexist without dependency relations.
+- Use `input` relations for actual submodel/meta-model composition.
+- Use `correlated` or `complementary` relations for informational relationships that are not execution dependencies.
+- Keep the model graph separate from the hypothesis hierarchy.
 
 ## Stop conditions
-Stop when the milestone question is answered, the committed budget is exhausted, required data/capability is unavailable, or further work cannot change the conclusion.
+Stop when the active hypothesis is sufficiently resolved at its required evaluation depth, the committed budget is exhausted, required data/capability is unavailable, or further work cannot change the conclusion.
 
 ## Operational entry points
-Use `automo status` and `automo plan` to inspect governed state. Use `automo guidance --task-class <task-class>` to load the minimum task-specific guidance. Milestone lifecycle actions live under `automo research milestone-create`, `automo research milestone-transition`, `automo research milestone-status`, and `automo research milestone-conclude`.
+Use `automo status` and `automo plan` to inspect governed state. Use `automo guidance --task-class <task-class>` to load the minimum task-specific guidance. Manage model structure with `automo research model-add` and `automo research model-relation-add`; manage scientific claims with `automo research hypothesis-create`, `automo research hypothesis-activate`, `automo research hypothesis-tree`, and `automo research hypothesis-conclude`.

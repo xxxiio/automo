@@ -1,6 +1,6 @@
 # Public Python API
 
-Automo `0.3.0a1` is an alpha. The package distinguishes stable extension surfaces from implementation details so external projects do not need to depend on filesystem services or orchestration internals.
+Automo `0.3.0a2` is an alpha. The package distinguishes stable extension surfaces from implementation details so external projects do not need to depend on filesystem services or orchestration internals.
 
 ## Root-level public contracts
 
@@ -11,7 +11,8 @@ The following are intentionally importable from `automo`:
 - objectives/evaluation: `ObjectiveSpec`, `MetricSpec`, `MetricDirection`, `MetricScope`, `EvaluationSpec`, `EvaluationContext`, `Evaluator`;
 - models: `ModelSpec`, `ModelTrainer`, `TrainingRequest`, `TrainingResult`, `ModelOutputBatch`;
 - graphs: `ModelGraphSpec`, `ModelNodeSpec`, `ModelOutputInput`, `CrossFitSpec`;
-- plugin/runtime: `ResearchPlugin`, `ResearchRuntime`.
+- plugin/runtime: `ResearchPlugin`, `ResearchRuntime`;
+- research governance: `ResearchGovernance`, `ResearchHypothesis`, `ResearchProvenance`, `ModelComponent`, `ModelRelation`, `ModelCandidate`, `CandidateInput`, `CompositionExperiment`, `HypothesisObjective`, `EvaluationDepth`.
 
 These contracts are the preferred extension boundary for project packages.
 

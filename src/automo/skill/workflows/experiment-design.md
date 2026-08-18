@@ -1,10 +1,10 @@
 # Experiment design workflow
 
 ## Inputs
-Active milestone, current diagnosis, baseline, declared search space, data/split protocol, prior candidate fingerprints, remaining budget, and OOS boundary.
+Active hypothesis, current diagnosis, baseline, declared search space, data/split protocol, prior candidate fingerprints, remaining budget, and OOS boundary.
 
 ## Procedure
-1. State one falsifiable hypothesis tied directly to the milestone question.
+1. State one falsifiable hypothesis tied directly to the active hypothesis.
 2. Select one conceptual intervention; keep unrelated model, feature, calibration, and data choices fixed unless the plan explicitly defines a factorial experiment.
 3. Define the baseline, candidate, primary decision metric, materiality threshold, and required stability/subgroup checks before fitting.
 4. Record the candidate-generation rule and maximum number of attempted variants.

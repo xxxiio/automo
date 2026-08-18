@@ -22,8 +22,8 @@ _CORE = (
     "acceptance/core.md",
 )
 _TASKS = {
-    "milestone-planning": (
-        "workflows/milestone-planning.md",
+    "hypothesis-planning": (
+        "workflows/hypothesis-planning.md",
         "policies/bounded-search.md",
         "policies/multiple-testing.md",
         "policies/early-stopping.md",
@@ -73,8 +73,8 @@ _TASKS = {
         "references/intervention-decision-table.md",
         "standards/model-comparison.md",
     ),
-    "milestone-conclusion": (
-        "workflows/milestone-conclusion.md",
+    "hypothesis-conclusion": (
+        "workflows/hypothesis-conclusion.md",
         "policies/multiple-testing.md",
         "policies/early-stopping.md",
         "acceptance/research-completion.md",

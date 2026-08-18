@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from automo.contracts import ContractError, ExperimentSpec, load_experiment
+from automo.contracts import ExperimentSpec
 from automo.execution import run_temporal_stability
 from automo.execution.local import ExecutionError
 from automo.governance import ResearchGovernance
@@ -180,13 +180,13 @@ def doctor_checks(root: Path) -> tuple[DoctorCheck, ...]:
     root = root.resolve()
     checks: list[DoctorCheck] = [DoctorCheck("Automo installation", "pass", package_version())]
     has_config = (root / "automo.toml").is_file()
-    has_legacy_contracts = (root / "research/objectives/current.yaml").is_file()
+    has_research_state = (root / ".automo" / "project.yaml").is_file()
     checks.append(
         DoctorCheck(
             "Automo project",
-            "pass" if has_config or has_legacy_contracts else "fail",
+            "pass" if has_config and has_research_state else "fail",
             str(root),
-            blocking=not (has_config or has_legacy_contracts),
+            blocking=not (has_config and has_research_state),
         )
     )
     if has_config:
@@ -196,23 +196,17 @@ def doctor_checks(root: Path) -> tuple[DoctorCheck, ...]:
             checks.append(DoctorCheck("Project plugin", "fail", str(exc), blocking=True))
         else:
             checks.append(DoctorCheck("Project plugin", "pass", plugin.id))
-    if has_legacy_contracts:
-        try:
-            status = project_status(root)
-        except (ContractError, OSError, ValueError) as exc:
-            checks.append(DoctorCheck("Research contracts", "fail", str(exc), blocking=True))
-        else:
-            checks.append(
-                DoctorCheck(
-                    "Research contracts",
-                    "pass",
-                    f"{status.objective_id}; next={status.experiment_id}",
-                )
-            )
-    else:
-        checks.append(
-            DoctorCheck("Research contracts", "optional", "no committed legacy experiment contract")
+    governance_errors = ResearchGovernance(root).validate()
+    checks.append(
+        DoctorCheck(
+            "Research governance",
+            "fail" if governance_errors else "pass",
+            "; ".join(governance_errors)
+            if governance_errors
+            else "program/model/hypothesis state valid",
+            blocking=bool(governance_errors),
         )
+    )
     integration = GetDoneCapabilityWorkflow(enabled=False).status()
     checks.append(
         DoctorCheck(
@@ -247,22 +241,13 @@ def validate_project(root: Path) -> tuple[bool, tuple[str, ...], tuple[str, ...]
     warnings: list[str] = []
     root = root.resolve()
     has_config = (root / "automo.toml").is_file()
-    has_legacy_contracts = (root / "research/objectives/current.yaml").is_file()
     if has_config:
         try:
             load_project_plugin(root)
         except PluginLoadError as exc:
             errors.append(str(exc))
-    elif not has_legacy_contracts:
+    else:
         errors.append(f"Automo project config is missing: {root / 'automo.toml'}")
-
-    if has_legacy_contracts:
-        try:
-            status = project_status(root)
-            experiment_path = root / "research/experiments" / f"{status.experiment_id}.yaml"
-            load_experiment(experiment_path)
-        except (ContractError, OSError, ValueError) as exc:
-            errors.append(str(exc))
 
     governance_errors = ResearchGovernance(root).validate()
     errors.extend(governance_errors)

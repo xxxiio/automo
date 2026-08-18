@@ -12,7 +12,7 @@ Package publication is intentionally separate from ordinary CI. `.github/workflo
 
 1. checks out the tagged commit and verifies the tag points to the current `main` HEAD;
 2. requires a successful `ci.yml` push run for that exact `main` commit instead of rerunning the quality/test/docs matrix;
-3. verifies that a tag such as `v0.3.0a1` matches the package version `0.3.0a1`;
+3. verifies that a tag such as `v0.3.0a2` matches the package version `0.3.0a2`;
 4. builds both the wheel and source distribution;
 5. validates the distributions; and
 6. publishes the exact built artifacts to PyPI using Trusted Publishing (OIDC).
@@ -23,7 +23,7 @@ No long-lived PyPI API token is required or expected.
 
 Create the `automo` project on PyPI, or configure a pending Trusted Publisher for the first upload, with these values:
 
-- GitHub owner: `xlatomapp`
+- GitHub owner: `xxxiio`
 - Repository: `automo`
 - Workflow filename: `publish-pypi.yml`
 - Environment: `pypi`
@@ -33,8 +33,8 @@ In the GitHub repository, create an environment named `pypi`. A required reviewe
 ### Release procedure
 
 1. Merge the release candidate into `main` and make sure CI is green.
-2. Tag the exact release commit, for example `v0.3.0a1`.
-3. Push only that tag, for example `git push origin v0.3.0a1`.
+2. Tag the exact release commit, for example `v0.3.0a2`.
+3. Push only that tag, for example `git push origin v0.3.0a2`.
 4. Approve the `pypi` environment deployment if environment protection requires it.
 5. Confirm that the `publish-pypi` workflow published both distributions.
 
@@ -52,7 +52,7 @@ One-time repository setup:
 
 The configured project URL is:
 
-`https://xlatomapp.github.io/automo/`
+`https://xxxiio.github.io/automo/`
 
 
 ## Release safety model

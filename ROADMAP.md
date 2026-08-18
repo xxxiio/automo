@@ -1,6 +1,6 @@
 # Automo Roadmap
 
-Automo is preparing its first intentionally public alpha, `0.3.0a1`.
+Automo is preparing the `0.3.0a2` public alpha, extending the first public alpha with multi-model research governance and composition research.
 
 ## Completed foundation
 
@@ -20,7 +20,7 @@ The current package includes:
 
 ## Public alpha hardening
 
-`0.3.0a1` is gated on:
+`0.3.0a2` is gated on:
 
 - Automo-only package/CLI identity;
 - clean wheel and sdist contents;

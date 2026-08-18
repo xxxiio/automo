@@ -5,11 +5,11 @@ Automo ships a read-only research guidance pack inside the Python distribution. 
 Use:
 
 ```bash
-automo guidance --task-class milestone-planning
+automo guidance --task-class hypothesis-planning
 automo guidance --task-class experiment-design
 automo guidance --task-class model-diagnosis
 automo guidance --task-class meta-model-research
-automo guidance --task-class milestone-conclusion
+automo guidance --task-class hypothesis-conclusion
 ```
 
 Use `--paths-only` when an agent or wrapper wants the selected package resources without their content. Available task classes are listed by `automo research task-classes`.
@@ -18,15 +18,15 @@ Use `--paths-only` when an agent or wrapper wants the selected package resources
 
 The guidance pack separates workflows, standards, acceptance gates, policies, references, and contracts. Core research guidance is always included; specialist material is selected only when its task class applies. The selector is bounded and validated so one task does not pull the entire pack into agent context.
 
-The guidance is procedure; `.automo/` is authoritative project-owned research state. An agent must inspect the current milestone and next step before governed execution.
+The guidance is procedure; `.automo/` is authoritative project-owned research state. An agent must inspect the current research program, model graph, and active hypothesis before governed execution.
 
 ## Governed research lifecycle
 
 A normal sequence is:
 
 1. enter plan mode and select the highest-value unresolved research question;
-2. precommit milestone exit criteria, non-goals, data/split boundaries, candidate/OOS budgets, materiality, and stop rules;
-3. approve and activate the milestone;
+2. select or create the falsifiable hypothesis that best addresses the current project direction;
+3. precommit hypothesis objectives, evaluation depth, data/split boundaries, candidate/OOS budgets, materiality, and stop rules, then activate the hypothesis;
 4. design one falsifiable intervention tied to the diagnosis;
 5. execute without using sealed OOS for candidate generation;
 6. record every attempted candidate and preserve failed evidence;
@@ -48,6 +48,6 @@ The pack includes explicit guidance for:
 
 ## Reliability checks
 
-Automo validates that each task class resolves to existing packaged Markdown, includes its required safety documents, and stays within the selection-size bound. Tests also exercise documented CLI entry points and a synthetic multi-milestone walkthrough.
+Automo validates that each task class resolves to existing packaged Markdown, includes its required safety documents, and stays within the selection-size bound. Tests also exercise documented CLI entry points and a synthetic multi-hypothesis walkthrough.
 
 See `examples/research-guidance/` for a sequence containing a rejected feature hypothesis, an accepted model-family intervention, and a rejected recalibration intervention without OOS leakage or unbounded search.

@@ -7,6 +7,8 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from automo.governance import ResearchProvenance
+
 
 class InterventionKind(StrEnum):
     MODEL = "model"
@@ -94,6 +96,7 @@ class ResearchPlan:
     budget: ResearchBudget
     safeguards: ResearchSafeguards
     candidates: tuple[CandidateProposal, ...]
+    provenance: ResearchProvenance | None = None
 
 
 class CandidateStage(StrEnum):

@@ -4,6 +4,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 
+from automo.governance import ResearchProvenance
 from automo.persistence import write_yaml_artifact
 from automo.refresh.contracts import SplitStrategy
 from automo.runtime.contracts import (
@@ -76,6 +77,7 @@ class ResearchService:
         search_space: ResearchSearchSpace,
         budget: ResearchBudget,
         safeguards: ResearchSafeguards,
+        provenance: ResearchProvenance | None = None,
     ) -> ResearchPlan:
         if baseline_model_spec_id not in self.runtime.model_specs:
             raise ResearchError(f"unknown baseline model spec: {baseline_model_spec_id}")
@@ -94,6 +96,7 @@ class ResearchService:
             raise ResearchError("no untested candidates remain within the committed search space")
         plan = ResearchPlan(
             id=iteration_id,
+            provenance=provenance,
             baseline_model_spec_id=baseline_model_spec_id,
             data_source_id=data_source_id,
             split_strategy_id=split_strategy_id,
@@ -239,6 +242,9 @@ class ResearchService:
             return
         payload = {
             "id": request_id,
+            "requested_by": plan.provenance.as_dict()
+            if plan.provenance
+            else {"experiment": plan.id},
             "experiment": plan.id,
             "capability": {"id": capability.replace(" ", "-"), "kind": "research-runtime"},
             "reason": reason,

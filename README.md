@@ -60,21 +60,48 @@ Small synthetic examples are under `examples/`:
 - `id-only-data` — deterministic splitting without timestamps.
 - `end-to-end` — a compact project/runtime/registry walkthrough.
 
-Start with [Getting started](docs/getting-started.md), then see [Agent research guidance](docs/agent-guidance.md), [Public API](docs/public-api.md), [Trainers and graphs](docs/trainers-and-graphs.md), [Model registry](docs/model-registry.md), [Refresh](docs/refresh.md), and [Bounded research](docs/research.md).
+Start with [Getting started](https://xxxiio.github.io/automo/getting-started/), then see [Agent research guidance](https://xxxiio.github.io/automo/agent-guidance/), [Public API](https://xxxiio.github.io/automo/public-api/), [Trainers and graphs](https://xxxiio.github.io/automo/trainers-and-graphs/), [Model registry](https://xxxiio.github.io/automo/model-registry/), [Refresh](https://xxxiio.github.io/automo/refresh/), and [Bounded research](https://xxxiio.github.io/automo/research/).
 
 ## Alpha status
 
-`0.3.0a1` is the first intentionally public alpha. Persistent public artifacts carry an artifact type and schema version, but APIs may still evolve during the alpha series. See the [public alpha release contract](docs/release-contract.md) for supported boundaries and known limitations.
+`0.3.0a2` is the current public alpha and adds hierarchical multi-model research composition on top of the initial alpha runtime. Persistent public artifacts carry an artifact type and schema version, but APIs may still evolve during the alpha series. See the [public alpha release contract](https://xxxiio.github.io/automo/release-contract/) for supported boundaries and known limitations.
 
 ## Security
 
-Automo does not sandbox project plugins, trainers, evaluators, codecs, calibrators, injected services, or delegated workflow providers. Only run trusted extension code and load trusted model artifacts. See [SECURITY.md](SECURITY.md).
+Automo does not sandbox project plugins, trainers, evaluators, codecs, calibrators, injected services, or delegated workflow providers. Only run trusted extension code and load trusted model artifacts. See [security policy](https://github.com/xxxiio/automo/blob/main/SECURITY.md).
 
 ## Development workflow
 
 This repository uses uv plus pre-commit as the development gate. Repository/configuration hygiene, Ruff formatting/linting, and `uv run pytest -q` run through the uv-managed project environment. GitHub uses uv for the same gate and separately runs pytest on Python 3.11, 3.12, and 3.13. GetDone project records under `.agent/` are development metadata for this repository and are not required at runtime.
 
 
+## Research program structure
+
+Automo keeps scientific research state separate from project-management direction. GetDone or another project system owns roadmap/milestone guidance; Automo owns the model graph, falsifiable hypothesis hierarchy, experiments, evidence, and scientific conclusions.
+
+The model graph supports independent models, submodel → meta-model composition (`input` relations), and flat informational relationships such as `correlated` or `complementary`. The hypothesis hierarchy is a separate graph: scientific parent/child claims do not have to mirror runtime model dependencies. Governed automated research binds plans and capability requests to program → hypothesis → experiment provenance.
+
+```bash
+automo research model-add ranking --role submodel
+automo research model-add meta --role meta
+automo research model-relation-add ranking meta --kind input
+automo research hypothesis-create H-RANK \
+  --statement "Ranking adds incremental information." \
+  --primary-model ranking \
+  --related-model meta \
+  --objective ndcg:local:maximize \
+  --objective meta_log_loss:parent:minimize \
+  --evaluation-depth parent
+automo research hypothesis-activate H-RANK
+
+# Register immutable model candidates and their exact composition.
+automo research candidate-add RANK-v1 --model ranking --model-spec-id ranking-v1 --artifact-id MODEL-RANK-v1
+automo research candidate-add META-v1 --model meta --model-spec-id meta-linear --artifact-id MODEL-META-v1 \
+  --input ranking:RANK-v1
+```
+
+Composition/ablation experiments are first-class research artifacts. Each immutable composed-model candidate pins its exact upstream candidate versions; experiments compare two such candidates, so Automo can distinguish standalone model improvements from incremental meta-model value. See [Research governance](https://xxxiio.github.io/automo/research-governance/).
+
 ## Project-specific research guidance
 
-Keep mutable research state under `.automo/` and project-owned agent instructions under `.project-agent/automo/`. `automo guidance` discovers `.project-agent/automo/index.json` additively by default; use `--no-project-agent` for canonical Automo-only guidance. Pin a reviewed composition with `automo guidance-lock --write` and verify it with `automo guidance-check`. Project guidance may strengthen or specialize research rules but cannot replace protected sealed-OOS, bounded-search, evidence, or milestone-governance rules.
+Keep mutable research state under `.automo/` and project-owned agent instructions under `.project-agent/automo/`. `automo guidance` discovers `.project-agent/automo/index.json` additively by default; use `--no-project-agent` for canonical Automo-only guidance. Pin a reviewed composition with `automo guidance-lock --write` and verify it with `automo guidance-check`. Project guidance may strengthen or specialize research rules but cannot replace protected sealed-OOS, bounded-search, evidence, or hypothesis-governance rules.

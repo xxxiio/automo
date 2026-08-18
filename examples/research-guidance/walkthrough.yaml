@@ -1,8 +1,8 @@
 project: synthetic-guidance-walkthrough
 objective: minimize synthetic prediction error without sealed-OOS leakage
-milestones:
-  - id: R001
-    question: Does adding the bounded interaction feature improve validation materially?
+hypotheses:
+  - id: H001
+    statement: The bounded interaction feature adds material predictive information.
     diagnosis: baseline is stable but underfits a known interaction pattern
     plan:
       maximum_candidates: 2
@@ -14,9 +14,9 @@ milestones:
         result: validation_improvement_below_threshold
         decision: rejected
     conclusion: rejected
-    next_step: investigate whether model capacity rather than feature information is limiting
-  - id: R002
-    question: Does a bounded nonlinear model improve the objective without temporal instability?
+    project_implication: investigate whether model capacity rather than feature information is limiting
+  - id: H002
+    statement: A bounded nonlinear model improves the objective without temporal instability.
     diagnosis: feature information is present but the linear baseline cannot represent it
     plan:
       maximum_candidates: 2
@@ -30,10 +30,10 @@ milestones:
       - id: E003
         result: sealed_oos_improvement_material
         decision: accepted
-    conclusion: accepted
-    next_step: evaluate whether calibration is still adequate on the retained candidate
-  - id: R003
-    question: Does recalibration improve probability quality without reducing downstream utility?
+    conclusion: supported
+    project_implication: evaluate whether calibration is still adequate on the retained candidate
+  - id: H003
+    statement: Recalibration improves probability quality without reducing downstream utility.
     diagnosis: ranking is stable but calibration evidence is weak
     plan:
       maximum_candidates: 1
@@ -45,9 +45,9 @@ milestones:
         result: calibration_improves_but_downstream_utility_declines
         decision: rejected
     conclusion: rejected
-    next_step: conclude the current research sequence with the uncalibrated retained model
+    project_implication: retain the uncalibrated candidate and return the result to project planning
 forbidden_actions:
   - use sealed OOS to generate a candidate
   - omit failed candidates from history
-  - widen a search after observing weak validation without a new approved plan
+  - widen a search after observing weak validation without a new committed plan
   - replace model and feature family in one unplanned intervention

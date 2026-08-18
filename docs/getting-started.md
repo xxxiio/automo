@@ -82,22 +82,26 @@ automo models --help
 
 Read `trainers-and-graphs.md` before implementing a downstream/meta-model so the cross-fitting boundary is clear.
 
-## Plan the first research milestone
+## Define the first research hypothesis
 
-A fresh project starts in research plan mode. Load the agent guidance and define a bounded scientific question before executing automated research:
+A fresh project has no active scientific claim. Define the relevant model structure and a falsifiable hypothesis before governed automated research:
 
 ```bash
-automo guidance --task-class milestone-planning
-automo research milestone-create R001 \
-  --question "Does the candidate improve the committed objective?" \
-  --why-next "It is the highest-value unresolved question." \
-  --exit-criterion "candidate evaluated" \
-  --exit-criterion "conclusion recorded"
+automo research model-add baseline --role standalone
+automo guidance --task-class hypothesis-planning
+automo research hypothesis-create H-ROOT \
+  --statement "The system provides useful out-of-sample predictive value." \
+  --primary-model baseline \
+  --evaluation-depth system
+automo research hypothesis-activate H-ROOT
+
+# Once a trained artifact exists, register it as a logical model candidate.
+automo research candidate-add BASE-v1 --model baseline --model-spec-id baseline-v1 --artifact-id MODEL-BASE-v1
+automo research candidate-select BASE-v1
 ```
 
-Advance through `planning`, `approved`, and `active` only after the research boundary is committed. See [Research governance](research-governance.md) and [Agent guidance](agent-guidance.md).
-
+Project roadmap and milestone direction should remain in GetDone or the project's own planning system. See [Research governance](research-governance.md) and [Agent guidance](agent-guidance.md).
 
 ## Project-specific research guidance
 
-Keep mutable research state under `.automo/` and project-owned agent instructions under `.project-agent/automo/`. `automo guidance` discovers `.project-agent/automo/index.json` additively by default; use `--no-project-agent` for canonical Automo-only guidance. Pin a reviewed composition with `automo guidance-lock --write` and verify it with `automo guidance-check`. Project guidance may strengthen or specialize research rules but cannot replace protected sealed-OOS, bounded-search, evidence, or milestone-governance rules.
+Keep mutable research state under `.automo/` and project-owned agent instructions under `.project-agent/automo/`. `automo guidance` discovers `.project-agent/automo/index.json` additively by default; use `--no-project-agent` for canonical Automo-only guidance. Pin a reviewed composition with `automo guidance-lock --write` and verify it with `automo guidance-check`. Project guidance may strengthen or specialize research rules but cannot replace protected sealed-OOS, bounded-search, evidence, or hypothesis-governance rules.

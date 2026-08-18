@@ -9,7 +9,7 @@ Apply whenever a research plan evaluates multiple candidates, repeatedly reuses 
 3. Do not treat the best validation result from a wide search as equivalent evidence to a pre-specified single comparison.
 4. Increase the evidentiary bar as adaptive search breadth grows. Prefer replication across folds/periods or a sealed OOS confirmation over interpreting tiny validation differences.
 5. Do not repeatedly inspect sealed OOS to choose among candidates. A consumed OOS slot remains consumed.
-6. If the plan changes because results were observed, record a new research plan or milestone boundary before continuing.
+6. If the plan changes because results were observed, record a new research plan or hypothesis boundary before continuing.
 7. Report the number of attempted, valid, shortlisted, and OOS-evaluated candidates with the conclusion.
 
 ## Practical interpretation

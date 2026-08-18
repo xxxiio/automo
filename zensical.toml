@@ -1,7 +1,7 @@
 [project]
 site_name = "Automo"
 site_description = "Automated model optimisation and lifecycle research"
-site_url = "https://xlatomapp.github.io/automo/"
+site_url = "https://xxxiio.github.io/automo/"
 docs_dir = "docs"
 site_dir = "site"
 nav = [

@@ -1,12 +1,29 @@
 # Changelog
 
+## 0.3.0a2
+
+### Multi-model research composition
+
+- Added immutable logical model candidates with exact upstream candidate inputs, optional program/hypothesis/experiment provenance, and one selected candidate per logical model.
+- Added first-class composition experiments for controlled ablation and meta/composition-model comparisons between two immutable candidates of the same target model.
+- Kept model dependencies (`input`) separate from flat informational relations (`correlated`, `complementary`, `alternative`) and from the scientific hypothesis hierarchy.
+- Added candidate/composition CLI commands and validation of candidate ownership and declared model-input relationships.
+- Added PyPI project URLs for repository, documentation, issues, and changelog.
+- Replaced PyPI-unsafe relative README documentation links with canonical absolute links and added release-link regression tests.
+- Updated research-governance, bounded-research, getting-started, and public-API documentation for the current contracts.
+
+### Hierarchical research programs and model structure
+
+- Replaced Automo-owned research milestones with explicit research programs and falsifiable hypothesis governance; project roadmap/milestone direction is now treated as external GetDone/project context.
+- Added a research model graph supporting independent models, submodel/meta-model `input` composition, and non-dependency `correlated`, `complementary`, and `alternative` relationships.
+- Added model-scoped and cross-model hypotheses with local/parent/system objectives and committed evaluation depth.
+- Added program → hypothesis → experiment provenance to automated research plans and generated capability requests/results.
+- Replaced milestone CLI/guidance flows with model and hypothesis commands (`model-add`, `model-relation-add`, `hypothesis-create`, `hypothesis-activate`, `hypothesis-tree`, `hypothesis-conclude`).
+
 ### Agent research governance and safety
 
-- Added `.automo/` project-owned research governance with milestone plan/research modes.
 - Added `automo guidance` and a packaged task-specific research guidance pack.
-- Added research milestone lifecycle commands and execution guards.
 - Added diagnosis, multiple-testing/selection-bias, early-stopping, meta-model ablation/OOF, refresh decision, and agent-adherence guidance.
-- Added deterministic guidance-pack validation and a synthetic multi-milestone research walkthrough.
 - Moved generated capability requests/results under `.automo/capabilities/` and added bounded GetDone handoff briefs without mutating `.agent/`.
 
 ## 0.3.0a1

@@ -81,8 +81,15 @@ Candidate fingerprints include the baseline plus the explicit intervention. A pr
 
 ## Missing capabilities
 
-If a candidate requires a runner or calibrator that is not registered, Automo persists a bounded capability request under `research/capabilities/requests/`. Optional GetDone delegation can then implement the missing capability through the existing governed capability workflow.
+If a candidate requires a runner or calibrator that is not registered, Automo persists a bounded capability request under `.automo/capabilities/requests/`. Optional GetDone delegation can then implement the missing capability through the existing governed capability workflow.
 
 ## Statistical boundary
 
 Validation is adaptive research evidence. Sealed research-OOS is touched only by the bounded shortlist after validation selection. Refresh-OOS remains a different evidence class used for recurring operational refresh.
+
+
+## Logical model candidates versus bounded search candidates
+
+The bounded-research engine uses `CandidateProposal` for one baseline-plus-intervention trial inside a research plan. Research governance separately uses immutable logical **model candidates** to identify retained versions of a model component such as `ranking`, `market`, or `meta`.
+
+Use `automo research candidate-add` when a trained/registered artifact should become a named candidate in the research program. Use `automo research composition-create` when the scientific question is incremental contribution, ablation, or composition architecture rather than a local single-model intervention. See [Research governance](research-governance.md).

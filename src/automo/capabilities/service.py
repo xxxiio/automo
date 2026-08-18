@@ -120,6 +120,7 @@ def fulfill_capability(
         "artifact_type": "automo.capability_result",
         "schema_version": 1,
         "request_id": request.identifier,
+        "research_provenance": request.provenance.as_dict() if request.provenance else None,
         "request_hash": _sha256(capability_request_path(root, request.identifier)),
         "attempt_id": attempt_id,
         "provider": provider_status.provider,
@@ -176,6 +177,14 @@ def create_getdone_handoff(root: Path, request_id: str) -> Path:
         f"- Capability: `{request.capability_id}`",
         f"- Kind: `{request.kind}`",
         f"- Requested by experiment: `{request.experiment}`",
+        *(
+            [
+                f"- Research program: `{request.provenance.program_id}`",
+                f"- Hypothesis: `{request.provenance.hypothesis_id}`",
+            ]
+            if request.provenance
+            else []
+        ),
         f"- Reason: {request.reason}",
         "",
         "## Requirements",

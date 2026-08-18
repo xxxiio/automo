@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "automo"
-version = "0.3.0a1"
+version = "0.3.0a2"
 description = "Automated model optimisation and lifecycle research"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,6 +22,13 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = ["PyYAML>=6.0", "typer>=0.16,<1"]
+
+[project.urls]
+Homepage = "https://xxxiio.github.io/automo/"
+Documentation = "https://xxxiio.github.io/automo/"
+Repository = "https://github.com/xxxiio/automo"
+Issues = "https://github.com/xxxiio/automo/issues"
+Changelog = "https://github.com/xxxiio/automo/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 getdone = ["getdone-dev>=1.1.2,<2"]

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from automo.contracts import ContractError, load_yaml
+from automo.governance import ResearchProvenance
 
 
 class CapabilityResultStatus(StrEnum):
@@ -34,6 +35,7 @@ class CapabilityScope:
 class CapabilityRequest:
     identifier: str
     experiment: str
+    provenance: ResearchProvenance | None
     capability_id: str
     kind: str
     reason: str
@@ -41,6 +43,7 @@ class CapabilityRequest:
     outputs: tuple[str, ...]
     requirements: tuple[str, ...]
     acceptance: tuple[str, ...]
+    non_goals: tuple[str, ...]
     scope: CapabilityScope
 
     @classmethod
@@ -64,9 +67,22 @@ class CapabilityRequest:
         for key in ("id", "kind"):
             if key not in capability:
                 raise ContractError(f"capability missing required key: {key}")
+        requested_by = value.get("requested_by")
+        provenance = None
+        if requested_by is not None:
+            requested_by = _mapping(requested_by, "requested_by")
+            if requested_by.get("program") and requested_by.get("hypothesis"):
+                provenance = ResearchProvenance(
+                    program_id=_string(requested_by["program"], "requested_by.program"),
+                    hypothesis_id=_string(requested_by["hypothesis"], "requested_by.hypothesis"),
+                    experiment_id=_optional_string(
+                        requested_by.get("experiment"), "requested_by.experiment"
+                    ),
+                )
         return cls(
             identifier=_string(value["id"], "id"),
             experiment=_string(value["experiment"], "experiment"),
+            provenance=provenance,
             capability_id=_string(capability["id"], "capability.id"),
             kind=_string(capability["kind"], "capability.kind"),
             reason=_string(value["reason"], "reason"),
@@ -74,6 +90,7 @@ class CapabilityRequest:
             outputs=tuple(_string_list(contract.get("outputs", []), "contract.outputs")),
             requirements=tuple(_string_list(value["requirements"], "requirements")),
             acceptance=tuple(_string_list(value["acceptance"], "acceptance")),
+            non_goals=tuple(_string_list(value.get("non_goals", []), "non_goals")),
             scope=CapabilityScope.from_mapping(scope),
         )
 
@@ -98,3 +115,9 @@ def _string_list(value: Any, field: str) -> list[str]:
     if not isinstance(value, list):
         raise ContractError(f"{field} must be a list")
     return [_string(item, field) for item in value]
+
+
+def _optional_string(value: Any, field: str) -> str | None:
+    if value is None:
+        return None
+    return _string(value, field)

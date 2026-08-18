@@ -14,4 +14,4 @@ Use this as a decision aid after diagnosis, not as an automatic rule.
 | train metric improves, validation flat | capacity/variance/objective diagnosis | more capacity |
 | calibration metric improves but downstream utility falls | objective-specific evaluation | promoting on calibration metric alone |
 
-A selected intervention must still satisfy the active milestone, declared search space, budget, and evidence policies.
+A selected intervention must still satisfy the active hypothesis, declared search space, budget, and evidence policies.

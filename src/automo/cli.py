@@ -25,7 +25,18 @@ from automo.execution import (
 from automo.execution.local import ExecutionError
 from automo.features import FeatureDispositionError, dispose_local_features
 from automo.findings import FindingError, propose_next_experiment
-from automo.governance import GovernanceError, MilestoneOutcome, MilestoneStatus, ResearchGovernance
+from automo.governance import (
+    CandidateInput,
+    EvaluationDepth,
+    GovernanceError,
+    HypothesisObjective,
+    HypothesisStatus,
+    ModelRelationKind,
+    ModelRole,
+    ObjectiveDirection,
+    ObjectiveLevel,
+    ResearchGovernance,
+)
 from automo.guidance import (
     GuidanceError,
     guidance_lock,
@@ -169,6 +180,12 @@ def research_plan(
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
     try:
+        governance = ResearchGovernance(root)
+        provenance = (
+            governance.provenance(iteration)
+            if (root / ".automo" / "project.yaml").is_file()
+            else None
+        )
         _, search_space, _, service = _research_components(root, space)
         plan = service.plan(
             iteration_id=iteration,
@@ -184,6 +201,7 @@ def research_plan(
                 maximum_oos_candidates=maximum_oos_candidates,
             ),
             safeguards=ResearchSafeguards(minimum_improvement=minimum_improvement),
+            provenance=provenance,
         )
     except Exception as exc:
         raise typer.Exit(_error(str(exc))) from exc
@@ -440,93 +458,259 @@ def guidance_lock_command(
     typer.echo(json.dumps(payload, indent=2, sort_keys=True))
 
 
-@research_app.command("milestone-create")
-def research_milestone_create(
-    milestone_id: str,
-    question: Annotated[str, typer.Option("--question")],
-    why_next: Annotated[str, typer.Option("--why-next")],
-    exit_criterion: Annotated[list[str], typer.Option("--exit-criterion")],
-    non_goal: Annotated[list[str] | None, typer.Option("--non-goal")] = None,
+@research_app.command("model-add")
+def research_model_add(
+    model_id: str,
+    role: Annotated[
+        str,
+        typer.Option(
+            "--role", help="standalone, submodel, meta, ensemble, distribution, or decision"
+        ),
+    ],
+    description: Annotated[str, typer.Option("--description")] = "",
+    experiment: Annotated[
+        str | None, typer.Option("--experiment", help="Experiment that produced this candidate.")
+    ] = None,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
-    """Create a proposed bounded research milestone and enter plan mode."""
+    """Register a logical model component in the research model graph."""
     try:
-        item = ResearchGovernance(root).create_milestone(
-            milestone_id,
-            question=question,
-            why_next=why_next,
-            exit_criteria=tuple(exit_criterion),
-            non_goals=tuple(non_goal or ()),
+        item = ResearchGovernance(root).register_model(
+            model_id, role=ModelRole(role), description=description
+        )
+    except (GovernanceError, ValueError) as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Model: {item.id}")
+    typer.echo(f"Role: {item.role.value}")
+
+
+@research_app.command("model-relation-add")
+def research_model_relation_add(
+    source: str,
+    target: str,
+    kind: Annotated[
+        str, typer.Option("--kind", help="input, correlated, complementary, or alternative")
+    ],
+    description: Annotated[str, typer.Option("--description")] = "",
+    experiment: Annotated[
+        str | None, typer.Option("--experiment", help="Experiment that produced this candidate.")
+    ] = None,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Add an explicit structural or informational relation between model components."""
+    try:
+        item = ResearchGovernance(root).add_model_relation(
+            source, target, kind=ModelRelationKind(kind), description=description
+        )
+    except (GovernanceError, ValueError) as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Relation: {item.source} -> {item.target} ({item.kind.value})")
+
+
+@research_app.command("candidate-add")
+def research_candidate_add(
+    candidate_id: str,
+    model: Annotated[str, typer.Option("--model")],
+    model_spec_id: Annotated[
+        str,
+        typer.Option(
+            "--model-spec-id",
+            help="ModelSpec/implementation specification used for this candidate.",
+        ),
+    ],
+    artifact_id: Annotated[
+        str,
+        typer.Option(
+            "--artifact-id", help="Runtime/registry artifact identifier for this candidate."
+        ),
+    ],
+    input_candidate: Annotated[
+        list[str] | None,
+        typer.Option("--input", help="model:candidate; repeat for composed inputs."),
+    ] = None,
+    description: Annotated[str, typer.Option("--description")] = "",
+    experiment: Annotated[
+        str | None, typer.Option("--experiment", help="Experiment that produced this candidate.")
+    ] = None,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Register an immutable candidate for one logical model component."""
+    try:
+        inputs = tuple(_parse_candidate_input(item) for item in (input_candidate or ()))
+        governance = ResearchGovernance(root)
+        active = governance.current_hypothesis()
+        provenance = governance.provenance(experiment) if active is not None else None
+        item = governance.register_candidate(
+            candidate_id,
+            model_id=model,
+            model_spec_id=model_spec_id,
+            artifact_id=artifact_id,
+            inputs=inputs,
+            provenance=provenance,
+            description=description,
         )
     except GovernanceError as exc:
         raise typer.Exit(_error(str(exc))) from exc
-    typer.echo(f"Milestone: {item.id}")
-    typer.echo(f"Status: {item.status.value}")
-    typer.echo("Mode: plan")
+    typer.echo(f"Candidate: {item.id}")
+    typer.echo(f"Model: {item.model_id}")
 
 
-@research_app.command("milestone-transition")
-def research_milestone_transition(
-    milestone_id: str,
-    status: Annotated[str, typer.Option("--status", help="planning, approved, or active")],
+@research_app.command("candidate-select")
+def research_candidate_select(
+    candidate_id: str,
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
-    """Advance one legal research-milestone transition."""
+    """Select the preferred candidate for its logical model component."""
     try:
-        target = MilestoneStatus(status)
-        if target == MilestoneStatus.CONCLUDED:
-            raise GovernanceError("use milestone-conclude to record a research outcome")
-        item = ResearchGovernance(root).transition(milestone_id, target)
-    except (GovernanceError, ValueError) as exc:
-        raise typer.Exit(_error(str(exc))) from exc
-    typer.echo(f"Milestone: {item.id}")
-    typer.echo(f"Status: {item.status.value}")
-    typer.echo(f"Mode: {'research' if item.status == MilestoneStatus.ACTIVE else 'plan'}")
-
-
-@research_app.command("milestone-status")
-def research_milestone_status(
-    milestone_id: str | None = None,
-    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
-) -> None:
-    """Show the current or named research milestone."""
-    try:
-        governance = ResearchGovernance(root)
-        item = governance.load(milestone_id) if milestone_id else governance.current_milestone()
-        if item is None:
-            typer.echo("Mode: plan")
-            typer.echo("Current milestone: none")
-            return
+        item = ResearchGovernance(root).select_candidate(candidate_id)
     except GovernanceError as exc:
         raise typer.Exit(_error(str(exc))) from exc
-    typer.echo(f"Milestone: {item.id}")
+    typer.echo(f"Selected: {item.id}")
+    typer.echo(f"Model: {item.model_id}")
+
+
+@research_app.command("composition-create")
+def research_composition_create(
+    experiment_id: str,
+    hypothesis: Annotated[str, typer.Option("--hypothesis")],
+    target_model: Annotated[str, typer.Option("--target-model")],
+    control_candidate: Annotated[str, typer.Option("--control-candidate")],
+    treatment_candidate: Annotated[str, typer.Option("--treatment-candidate")],
+    metric: Annotated[
+        list[str] | None,
+        typer.Option("--metric", help="Committed comparison metric; repeat as needed."),
+    ] = None,
+    rationale: Annotated[str, typer.Option("--rationale")] = "",
+    expected_effect: Annotated[str, typer.Option("--expected-effect")] = "",
+    falsification: Annotated[
+        list[str] | None,
+        typer.Option("--falsification", help="Falsification criterion; repeat as needed."),
+    ] = None,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Create a controlled comparison between two immutable composed-model candidates."""
+    try:
+        item = ResearchGovernance(root).create_composition_experiment(
+            experiment_id,
+            hypothesis_id=hypothesis,
+            target_model=target_model,
+            control_candidate_id=control_candidate,
+            treatment_candidate_id=treatment_candidate,
+            metrics=tuple(metric or ()),
+            rationale=rationale,
+            expected_effect=expected_effect,
+            falsification=tuple(falsification or ()),
+        )
+    except GovernanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Composition experiment: {item.id}")
+    typer.echo(f"Target model: {item.target_model}")
+    typer.echo(f"Kind: {item.kind.value}")
+
+
+def _parse_candidate_input(raw: str) -> CandidateInput:
+    model, separator, candidate = raw.partition(":")
+    if not separator or not model or not candidate:
+        raise GovernanceError("candidate input must be model:candidate")
+    return CandidateInput(model, candidate)
+
+
+@research_app.command("hypothesis-create")
+def research_hypothesis_create(
+    hypothesis_id: str,
+    statement: Annotated[str, typer.Option("--statement")],
+    parent: Annotated[str | None, typer.Option("--parent")] = None,
+    primary_model: Annotated[str | None, typer.Option("--primary-model")] = None,
+    related_model: Annotated[list[str] | None, typer.Option("--related-model")] = None,
+    objective: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--objective", help="metric:level:direction[:required|optional]; repeat as needed"
+        ),
+    ] = None,
+    evaluation_depth: Annotated[
+        str, typer.Option("--evaluation-depth", help="validity, local, parent, or system")
+    ] = "local",
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Create a falsifiable research hypothesis independent of project milestones."""
+    try:
+        objectives = []
+        for raw in objective or ():
+            parts = raw.split(":")
+            if len(parts) not in {3, 4}:
+                raise GovernanceError(
+                    "--objective must be metric:level:direction[:required|optional]"
+                )
+            required = len(parts) == 3 or parts[3] == "required"
+            if len(parts) == 4 and parts[3] not in {"required", "optional"}:
+                raise GovernanceError("objective requirement must be required or optional")
+            objectives.append(
+                HypothesisObjective(
+                    metric=parts[0],
+                    level=ObjectiveLevel(parts[1]),
+                    direction=ObjectiveDirection(parts[2]),
+                    required=required,
+                )
+            )
+        item = ResearchGovernance(root).create_hypothesis(
+            hypothesis_id,
+            statement=statement,
+            parent_id=parent,
+            primary_model=primary_model,
+            related_models=tuple(related_model or ()),
+            objectives=tuple(objectives),
+            required_evaluation_depth=EvaluationDepth[evaluation_depth.upper()],
+        )
+    except (GovernanceError, KeyError, ValueError) as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Hypothesis: {item.id}")
     typer.echo(f"Status: {item.status.value}")
-    typer.echo(f"Question: {item.question}")
-    if item.outcome:
-        typer.echo(f"Outcome: {item.outcome.value}")
 
 
-@research_app.command("milestone-conclude")
-def research_milestone_conclude(
-    milestone_id: str,
-    outcome: Annotated[
-        str, typer.Option("--outcome", help="accepted, rejected, inconclusive, or invalid")
-    ],
+@research_app.command("hypothesis-activate")
+def research_hypothesis_activate(
+    hypothesis_id: str,
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Make one unresolved hypothesis the active scientific context for research execution."""
+    try:
+        item = ResearchGovernance(root).activate_hypothesis(hypothesis_id)
+    except GovernanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    typer.echo(f"Hypothesis: {item.id}")
+    typer.echo("Status: active")
+
+
+@research_app.command("hypothesis-conclude")
+def research_hypothesis_conclude(
+    hypothesis_id: str,
+    status: Annotated[str, typer.Option("--status", help="supported, rejected, or inconclusive")],
     conclusion: Annotated[str, typer.Option("--conclusion")],
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
-    """Conclude an active research milestone and return to plan mode."""
+    """Record the current conclusion for an active hypothesis."""
     try:
-        item = ResearchGovernance(root).conclude(
-            milestone_id,
-            outcome=MilestoneOutcome(outcome),
-            conclusion=conclusion,
+        item = ResearchGovernance(root).conclude_hypothesis(
+            hypothesis_id, status=HypothesisStatus(status), conclusion=conclusion
         )
     except (GovernanceError, ValueError) as exc:
         raise typer.Exit(_error(str(exc))) from exc
-    typer.echo(f"Milestone: {item.id}")
-    typer.echo(f"Outcome: {item.outcome.value if item.outcome else '-'}")
-    typer.echo("Mode: plan")
+    typer.echo(f"Hypothesis: {item.id}")
+    typer.echo(f"Status: {item.status.value}")
+
+
+@research_app.command("hypothesis-tree")
+def research_hypothesis_tree(
+    root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
+) -> None:
+    """Render the scientific hypothesis hierarchy; this is distinct from the model graph."""
+    try:
+        rows = ResearchGovernance(root).hypothesis_tree()
+    except GovernanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
+    for depth, item in rows:
+        typer.echo(f"{'  ' * depth}- {item.id} [{item.status.value}] {item.statement}")
 
 
 @research_app.command("task-classes")
@@ -541,7 +725,10 @@ def init_command(
     root: Annotated[Path, typer.Option("--root", help="Automo project root.")] = _root_option(),
 ) -> None:
     """Create the standalone Automo directory skeleton without overwriting state."""
-    created = initialise_mr_project(root)
+    try:
+        created = initialise_mr_project(root)
+    except GovernanceError as exc:
+        raise typer.Exit(_error(str(exc))) from exc
     for path in created:
         typer.echo(f"created: {path}")
     typer.echo(f"summary: {len(created)} created; existing project files preserved")
@@ -575,14 +762,14 @@ def status_command(
             typer.echo(json.dumps(payload, indent=2, sort_keys=True))
             return
         typer.echo("# Automo Research Status")
-        typer.echo(f"Mode: {payload['mode']}")
-        milestone = payload["current_milestone"]
-        if milestone:
-            typer.echo(f"Milestone: {milestone['id']} ({milestone['status']})")
-            typer.echo(f"Question: {milestone['question']}")
+        typer.echo(f"Program: {payload['program']['id']}")
+        hypothesis = payload["current_hypothesis"]
+        if hypothesis:
+            typer.echo(f"Hypothesis: {hypothesis['id']} ({hypothesis['status']})")
+            typer.echo(f"Statement: {hypothesis['statement']}")
         else:
-            typer.echo("Milestone: none")
-        typer.echo(f"Next: {payload['next_step'].get('objective', '-')}")
+            typer.echo("Hypothesis: none active")
+        typer.echo(f"Models: {len(payload['models'])}; relations: {len(payload['relations'])}")
         return
     try:
         status = project_status(root)
@@ -602,25 +789,18 @@ def plan_command(
     """Show the committed next experiment, rationale, budget, and falsification."""
     if (root / ".automo" / "project.yaml").is_file():
         try:
-            payload = ResearchGovernance(root).plan_payload()
+            payload = ResearchGovernance(root).status_payload()
         except GovernanceError as exc:
             raise typer.Exit(_error(str(exc))) from exc
         if as_json:
             typer.echo(json.dumps(payload, indent=2, sort_keys=True))
             return
-        typer.echo(f"Mode: {payload['mode']}")
-        milestone = payload["milestone"]
-        if milestone:
-            typer.echo(f"Milestone: {milestone['id']} ({milestone['status']})")
-            typer.echo(f"Question: {milestone['question']}")
-            typer.echo(f"Why next: {milestone['why_next']}")
-            typer.echo("Exit criteria:")
-            for criterion in milestone["exit_criteria"]:
-                typer.echo(f"- {criterion}")
+        hypothesis = payload.get("current_hypothesis")
+        if hypothesis:
+            typer.echo(f"Hypothesis: {hypothesis['id']} ({hypothesis['status']})")
+            typer.echo(f"Statement: {hypothesis['statement']}")
         else:
-            typer.echo("Milestone: none")
-        typer.echo(f"Next: {payload['next_step'].get('objective', '-')}")
-        typer.echo(f"Execution allowed: {'yes' if payload['execution_allowed'] else 'no'}")
+            typer.echo("Hypothesis: none active")
         return
     try:
         payload = plan_payload(root)

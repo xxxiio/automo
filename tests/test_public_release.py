@@ -164,7 +164,7 @@ def test_release_workflow_is_tag_only_and_reuses_successful_ci() -> None:
     assert "pre-commit run --all-files" not in workflow
     assert "pytest -q" not in workflow
     assert "does not match package version" in workflow
-    assert "astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0" in workflow
+    assert "astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9" in workflow
     assert "uv sync" in workflow
     assert "uv build" in workflow
     assert "uvx twine check dist/*" in workflow
@@ -179,7 +179,7 @@ def test_ci_owns_quality_tests_health_docs_and_pages_without_tag_duplication() -
     assert "name: full quality gate" in workflow
     assert 'python-version: ["3.11", "3.12", "3.13"]' in workflow
     assert "matrix.python-version" in workflow
-    assert "astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0" in workflow
+    assert "astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9" in workflow
     assert "enable-cache: true" in workflow
     assert "uv sync" in workflow
     assert "uv run pytest -q" in workflow

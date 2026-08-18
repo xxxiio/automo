@@ -144,10 +144,13 @@ def test_plan_command_contains_governance_fields() -> None:
     assert "Maximum trials: 3" in result.stdout
 
 
-def test_doctor_is_standalone() -> None:
-    result = RUNNER.invoke(app, ["doctor", "--root", str(ROOT)])
-    assert result.exit_code == 0
-    assert "Research contracts" in result.stdout
+def test_doctor_requires_current_automo_project_state(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    init = RUNNER.invoke(app, ["init", "--root", str(project)])
+    assert init.exit_code == 0, init.output
+    result = RUNNER.invoke(app, ["doctor", "--root", str(project)])
+    assert result.exit_code == 0, result.output
+    assert "Research governance" in result.stdout
     assert "GetDone integration" in result.stdout
 
 
